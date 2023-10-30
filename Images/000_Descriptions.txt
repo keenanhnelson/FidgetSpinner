@@ -1,0 +1,86 @@
+001_MainBody1.jpg
+	The main 3d printed body of the fidget spinner
+
+002_MainBody2.jpg
+	Another view of the main 3d printed body
+
+003_WithBearing.jpg
+	Installed bearing that was cleaned with wd40 to make it speed smoother
+
+004_BarePcbFront.jpg
+	The top side of the PCB. It was custom etched from a bare copper clad board
+
+005_BarePcbBack.jpg
+	Back side of the PCB where the WS2812-2020 leds will be installed
+
+006_BarePcbCloseUp.jpg
+	Close up of the pads for the main processor the stm32L412k8. The etching process wasn't perfect and some of the pads had to be separated with a razor blade
+
+007_BarePcbFrontWithSolderedVias.jpg
+	Front side of the PCB with all the vias soldered
+
+008_BarePcbBackSolderedVias.jpg
+	Back side of the PCB with all the vias soldered
+
+009_BarePcbCloseUp2.jpg
+	Another close up picture of the pads for the main processor and vias soldered
+
+010_BarePcbCloseUp3.jpg
+	Another close up picture of the board with soldered vias
+	
+011_AssembledBoardFront.jpg
+	The front side of the fully assembled PCB
+
+012_AssembledBoardBack.jpg
+	The Back side of the fully assembled PCB with the very small WS2812-2020 leds installed. The power switch wasn't layed out properly so some bodge wires had to be installed to fix it
+	
+013_CloseUpOfMicroUsbChargingSection.jpg
+	Close up of micro usb connector and the lithium ion charging circuit
+
+014_CloseUpOfFpcProgrammingConnector.jpg
+	Close up of the Flat Flex Connector (FFC) which is used to program the microcontroller
+
+015_CloseUpOfMainProcessor.jpg
+	Close up of the stm32L412k8 main processor. It is a ARM Cortex M4 made by ST
+
+016_CloseUpOfLeftHallEffectSensor.jpg
+	Close up of the left hall effect sensor which will be used for measuring the speed of the fidget spinner
+
+017_CloseUpOfRightHallEffectSensor.jpg
+	Close up of the right hall effect sensor
+
+018_CloseUpOfBottomLeds.jpg
+	Close up of the WS2812-2020 leds which will be used to make light patterns
+
+019_CloseUpOfTopLeds.jpg
+	Close up of the top leds
+
+020_CloseUpOfPowerSwitch.jpg
+	Close up of the power switch and the bodge wires to fix a layout problem
+
+021_LithiumIonBattery.jpg
+	110mAh lithium ion battery that is used to power everything
+	
+022_BoardAttachedToBattery.jpg
+	Battery plugged into PCB
+
+023_BoardInstalled.jpg
+	PCB installed onto main 3d printed body
+
+024_RoutingWire.jpg
+	Routing wire through 3d printed channels
+
+025_BatteryInstalled.jpg
+	Battery fully installed onto 3d printed body. A little dab of hot glue keeps it in place
+
+026_EndCapsInstalledFront.jpg
+	The top end cap installed with magnets installed in alternating polarity. The magnets are used with hall effect sensors to judge the speed of rotation
+
+027_EndCapsInstalledBack.jpg
+	The back end cap installed. The WS2812-2020 leds are visible through a slot in the 3d printed body
+
+028_ScrewWeights.jpg
+	The whole devices is balanced using screws
+
+029_FinalAssembledUnit.jpg
+	Final assembled unit
