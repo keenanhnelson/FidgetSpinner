@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,7 +69,11 @@ void SystemClock_Config(void);
 #define NUM_SPI_BYTES_END_RESET 350
 
 void rgbToPixel_ws2812b_2020(uint32_t *rgb, uint8_t *pixelData, int32_t numPixels){
-    uint32_t pixelDataBitIndex = 0;
+    //First make sure the all the bytes start off zero so only setting bits is required
+	int numSpiBytesToSend = NUM_SPI_BYTES_PER_PIXEL*numPixels+NUM_SPI_BYTES_END_RESET;
+	memset(pixelData, 0, numSpiBytesToSend);
+
+	uint32_t pixelDataBitIndex = 0;
     for(int k=0; k<numPixels; k++){
         //Convert rgb to grb color which is needed by the smart pixel
         uint8_t r = (uint8_t)((rgb[k] >> 16) & 0xFF);
@@ -88,16 +93,15 @@ void rgbToPixel_ws2812b_2020(uint32_t *rgb, uint8_t *pixelData, int32_t numPixel
                 if(j<numOfHighSpiBits){//how many spi bits is the signal high for
                     pixelData[byteIndex] |= 1 << subBitIndex;//logic high
                 }else{
-                    pixelData[byteIndex] &= ~(1 << subBitIndex);//logic low
+//                    pixelData[byteIndex] &= ~(1 << subBitIndex);//logic low
                 }
                 pixelDataBitIndex++;
             }
         }
     }
-    memset(&pixelData[NUM_SPI_BYTES_PER_PIXEL*numPixels], 0, NUM_SPI_BYTES_END_RESET);//Set the last extra byte to all zeros so the MOSI data pin stays low
 
     //Transmit all the data needed to light up all of the smart pixels
-    HAL_SPI_Transmit(&hspi1, pixelData, NUM_SPI_BYTES_PER_PIXEL*numPixels+NUM_SPI_BYTES_END_RESET, 1000);
+    HAL_SPI_Transmit(&hspi1, pixelData, numSpiBytesToSend, 1000);
 
 }
 /* USER CODE END PFP */
@@ -144,7 +148,6 @@ int main(void)
   //Allocate space for pixels
   #define NUM_OF_PIXELS 10
 #define SCRATCH_PAD_SIZE (NUM_SPI_BYTES_PER_PIXEL * NUM_OF_PIXELS + NUM_SPI_BYTES_END_RESET)//One for extra byte so the first high bit is high for so long
-//  uint32_t pixelsRgb[NUM_OF_PIXELS] = {0x0f0000, 0x000f00, 0x0f0000, 0x0f000f};
   uint32_t pixelsRgb[NUM_OF_PIXELS] = {0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003};
   uint8_t pixelDataScratchPad[SCRATCH_PAD_SIZE];
   rgbToPixel_ws2812b_2020(pixelsRgb, pixelDataScratchPad, NUM_OF_PIXELS);
@@ -156,13 +159,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  static int currentLedIndex;
+	  static int currentLedIndex = -1;
 	  static int prevLedIndex = NUM_OF_PIXELS-1;
 	  static int prevCnt = -1;
-	  uint32_t currentCnt = htim1.Instance->CNT;
+	  int16_t currentCnt = htim1.Instance->CNT;
+	  int16_t diffCnt = currentCnt - prevCnt;
+	  if(diffCnt > 0){
+		  currentLedIndex += 1;
+		  if(currentLedIndex >= NUM_OF_PIXELS){
+			  currentLedIndex = 0;
+		  }
+	  }
+	  if(diffCnt < 0){
+		  currentLedIndex -= 1;
+		  if(currentLedIndex < 0){
+			  currentLedIndex = NUM_OF_PIXELS-1;
+		  }
+	  }
 	  if(prevCnt != currentCnt){
-		  currentLedIndex = currentCnt % NUM_OF_PIXELS;
-		  pixelsRgb[prevLedIndex] = 0x000000;
+		  pixelsRgb[prevLedIndex] = 0x000003;
 		  pixelsRgb[currentLedIndex] = 0x0f0000;
 		  prevCnt = currentCnt;
 		  prevLedIndex = currentLedIndex;
