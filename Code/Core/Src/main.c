@@ -27,6 +27,9 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include <stdlib.h>
+
+#include "pixels.h"
+#include "pixels_spi_wrapper.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,58 +55,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-//SPI to WS2812B_2020
-//10MHz spi clock
-//100ns resolution for each spi bit
-//Low bit requires 300ns on and 600ns off. Which is about 3 spi high and 6 spi low
-//High bit requires 600ns on and 300ns off. Which is about 6 spi high and 3 spi low
-//9 spi bits to 1 ws2812b bit
-//216 spi bits for 24 ws2812b bits
-//27 spi bytes per 1 ws2812b pixel
-//After all the color data bits are sent the data line needs to say low for at least 280us or 2800 spi bits or 350 spi bytes
 
-//rgb points to an array of desired rgb values that should equal numPixels
-//pixelData need to point to an amount of memory equal to NumSpiBytesPerPixel*numPixels
-#define NUM_SPI_BYTES_PER_PIXEL 27//Also change numOfHighSpiBits NUM_SPI_BITS_PER_PIXEL
-#define NUM_SPI_BITS_PER_PIXEL_BIT 9//Also change numOfHighSpiBits NUM_SPI_BYTES_PER_PIXEL
-#define NUM_SPI_BYTES_END_RESET 350
-
-void rgbToPixel_ws2812b_2020(uint32_t *rgb, uint8_t *pixelData, int32_t numPixels){
-    //First make sure the all the bytes start off zero so only setting bits is required
-	int numSpiBytesToSend = NUM_SPI_BYTES_PER_PIXEL*numPixels+NUM_SPI_BYTES_END_RESET;
-	memset(pixelData, 0, numSpiBytesToSend);
-
-	uint32_t pixelDataBitIndex = 0;
-    for(int k=0; k<numPixels; k++){
-        //Convert rgb to grb color which is needed by the smart pixel
-        uint8_t r = (uint8_t)((rgb[k] >> 16) & 0xFF);
-        uint8_t g = (uint8_t)((rgb[k] >> 8) & 0xFF);
-        uint8_t b = (uint8_t)((rgb[k] >> 0) & 0xFF);
-        uint32_t dataToSend = (g << 16) | (r << 8) | (b<<0);
-
-        //Generate bit stream
-        for(int i=0; i<24; i++){//24 bits for one pixel
-            uint8_t colorBit = (uint8_t)((dataToSend & 0x800000) >> 23);//Grab the MSb
-            dataToSend <<= 1;//shift to new data for next time
-            int byteIndex, subBitIndex;//Used to determine spi location
-            uint8_t numOfHighSpiBits = colorBit*3 + 3;//Equation to map 0->3 and 1->6
-            for(int j=0; j<NUM_SPI_BITS_PER_PIXEL_BIT; j++){//Number of spi bits in one smart pixel bit
-                byteIndex = pixelDataBitIndex / 8;//Determines current spi byte
-                subBitIndex = 7 - (pixelDataBitIndex % 8);//Determines which bit needs to be change in the current spi byte
-                if(j<numOfHighSpiBits){//how many spi bits is the signal high for
-                    pixelData[byteIndex] |= 1 << subBitIndex;//logic high
-                }else{
-//                    pixelData[byteIndex] &= ~(1 << subBitIndex);//logic low
-                }
-                pixelDataBitIndex++;
-            }
-        }
-    }
-
-    //Transmit all the data needed to light up all of the smart pixels
-    HAL_SPI_Transmit(&hspi1, pixelData, numSpiBytesToSend, 1000);
-
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -145,13 +97,15 @@ int main(void)
 
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_1);
 
-  //Allocate space for pixels
-  #define NUM_OF_PIXELS 10
-#define SCRATCH_PAD_SIZE (NUM_SPI_BYTES_PER_PIXEL * NUM_OF_PIXELS + NUM_SPI_BYTES_END_RESET)//One for extra byte so the first high bit is high for so long
-  uint32_t pixelsRgb[NUM_OF_PIXELS] = {0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003};
-  uint8_t pixelDataScratchPad[SCRATCH_PAD_SIZE];
-  rgbToPixel_ws2812b_2020(pixelsRgb, pixelDataScratchPad, NUM_OF_PIXELS);
+  PixelsInfo pixelInfo;
+  initPixels(&pixelInfo, WS2812B_2020, 10, sendSpiPixelDataWrapper, 10000000);
+  uint32_t pixelsRgb[] = {0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003};
+  setPixelsColors(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
+
+  int currentLedIndex = -1;
+  int prevLedIndex = pixelInfo.numPixels-1;
+  int prevCnt = -1;
 
   /* USER CODE END 2 */
 
@@ -159,44 +113,41 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  static int currentLedIndex = -1;
-	  static int prevLedIndex = NUM_OF_PIXELS-1;
-	  static int prevCnt = -1;
-	  int16_t currentCnt = htim1.Instance->CNT;
-	  int16_t diffCnt = currentCnt - prevCnt;
-	  if(diffCnt > 0){
-		  currentLedIndex += 1;
-		  if(currentLedIndex >= NUM_OF_PIXELS){
-			  currentLedIndex = 0;
-		  }
-	  }
-	  if(diffCnt < 0){
-		  currentLedIndex -= 1;
-		  if(currentLedIndex < 0){
-			  currentLedIndex = NUM_OF_PIXELS-1;
-		  }
-	  }
-	  if(prevCnt != currentCnt){
-		  pixelsRgb[prevLedIndex] = 0x000003;
-		  pixelsRgb[currentLedIndex] = 0x0f0000;
-		  prevCnt = currentCnt;
-		  prevLedIndex = currentLedIndex;
-		  rgbToPixel_ws2812b_2020(pixelsRgb, pixelDataScratchPad, NUM_OF_PIXELS);
-	  }
 
-//	  static int prevCnt = -1;
-//	  static int colors[] = {0x0f0000, 0x000f00, 0x00000f};
-//	  static int numColors = sizeof(colors)/sizeof(colors[0]);
-//	  static int colorIndex;
-//	  uint32_t currentCnt = htim1.Instance->CNT;
-//	  if(prevCnt != currentCnt){
-//		  colorIndex = currentCnt % numColors;
-//		  for(int i=0; i<NUM_OF_PIXELS; i++){
-//			  pixelsRgb[i] = colors[colorIndex];
+//	  int16_t currentCnt = htim1.Instance->CNT;
+//	  int16_t diffCnt = currentCnt - prevCnt;
+//	  if(diffCnt > 0){
+//		  currentLedIndex += 1;
+//		  if(currentLedIndex >= pixelInfo.numPixels){
+//			  currentLedIndex = 0;
 //		  }
-//		  rgbToPixel_ws2812b_2020(pixelsRgb, pixelDataScratchPad, NUM_OF_PIXELS);
-//		  prevCnt = currentCnt;
 //	  }
+//	  if(diffCnt < 0){
+//		  currentLedIndex -= 1;
+//		  if(currentLedIndex < 0){
+//			  currentLedIndex = pixelInfo.numPixels-1;
+//		  }
+//	  }
+//	  if(prevCnt != currentCnt){
+//		  pixelsRgb[prevLedIndex] = 0x000003;
+//		  pixelsRgb[currentLedIndex] = 0x0f0000;
+//		  prevCnt = currentCnt;
+//		  prevLedIndex = currentLedIndex;
+//		  setPixelsColors(&pixelInfo, pixelsRgb);
+//	  }
+
+	  static int colors[] = {0x0f0000, 0x000f00, 0x00000f};
+	  static int numColors = sizeof(colors)/sizeof(colors[0]);
+	  static int colorIndex;
+	  uint32_t currentCnt = htim1.Instance->CNT;
+	  if(prevCnt != currentCnt){
+		  colorIndex = currentCnt % numColors;
+		  for(int i=0; i<pixelInfo.numPixels; i++){
+			  pixelsRgb[i] = colors[colorIndex];
+		  }
+		  setPixelsColors(&pixelInfo, pixelsRgb);
+		  prevCnt = currentCnt;
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
