@@ -30,6 +30,7 @@
 
 #include "pixels.h"
 #include "pixels_spi_wrapper.h"
+#include "pixels_patterns.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,17 +96,15 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
+  //Setup encoder
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_1);
 
+  //Setup pixels
   PixelsInfo pixelInfo;
   initPixels(&pixelInfo, WS2812B_2020, 10, sendSpiPixelDataWrapper, 10000000);
   uint32_t pixelsRgb[] = {0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003};
   setPixelsColors(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
-
-  int currentLedIndex = -1;
-  int prevLedIndex = pixelInfo.numPixels-1;
-  int prevCnt = -1;
 
   /* USER CODE END 2 */
 
@@ -113,41 +112,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-//	  int16_t currentCnt = htim1.Instance->CNT;
-//	  int16_t diffCnt = currentCnt - prevCnt;
-//	  if(diffCnt > 0){
-//		  currentLedIndex += 1;
-//		  if(currentLedIndex >= pixelInfo.numPixels){
-//			  currentLedIndex = 0;
-//		  }
-//	  }
-//	  if(diffCnt < 0){
-//		  currentLedIndex -= 1;
-//		  if(currentLedIndex < 0){
-//			  currentLedIndex = pixelInfo.numPixels-1;
-//		  }
-//	  }
-//	  if(prevCnt != currentCnt){
-//		  pixelsRgb[prevLedIndex] = 0x000003;
-//		  pixelsRgb[currentLedIndex] = 0x0f0000;
-//		  prevCnt = currentCnt;
-//		  prevLedIndex = currentLedIndex;
-//		  setPixelsColors(&pixelInfo, pixelsRgb);
-//	  }
-
-	  static int colors[] = {0x0f0000, 0x000f00, 0x00000f};
-	  static int numColors = sizeof(colors)/sizeof(colors[0]);
-	  static int colorIndex;
-	  uint32_t currentCnt = htim1.Instance->CNT;
-	  if(prevCnt != currentCnt){
-		  colorIndex = currentCnt % numColors;
-		  for(int i=0; i<pixelInfo.numPixels; i++){
-			  pixelsRgb[i] = colors[colorIndex];
-		  }
-		  setPixelsColors(&pixelInfo, pixelsRgb);
-		  prevCnt = currentCnt;
-	  }
+	  displayPixelPattern(&pixelInfo, pixelsRgb, PIXEL_PATTERN2);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
