@@ -41,9 +41,8 @@ void initPixels(
 		void (*sendSpiData)(uint8_t *data, uint32_t len),
 		uint32_t spiClockFreq
 );
-
 void deinitPixels(PixelsInfo *pixelsInfo);
-
+Rgb hsvToRgb(Hsv hsv);
 void setPixelsRgb(PixelsInfo *pixelInfo, Rgb *rgb);
 void setPixelsHsv(PixelsInfo *pixelsInfo, Rgb *rgb, Hsv *hsv);
 

@@ -5,7 +5,8 @@
 
 typedef enum{
 	PIXEL_PATTERN1,
-	PIXEL_PATTERN2
+	PIXEL_PATTERN2,
+	PIXEL_PATTERN3
 }PixelPatternType;
 
 void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternType pixelPattern);

@@ -45,7 +45,7 @@ void deinitPixels(PixelsInfo *pixelsInfo){
 	free(pixelsInfo->spiData);
 }
 
-Rgb hsvToRgb(Hsv hsv) {
+Rgb hsvToRgb(Hsv hsv){
     Rgb rgb;
     int i;
     float f, p, q, t;
