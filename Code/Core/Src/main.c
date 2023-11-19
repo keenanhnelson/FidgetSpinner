@@ -31,6 +31,7 @@
 #include "pixels.h"
 #include "pixels_spi_wrapper.h"
 #include "pixels_patterns.h"
+#include "user_interface.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,29 +57,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-int8_t buttonHeldDownLongEnough = 0;
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	if(GPIO_Pin == BUTTON_Pin){
-		GPIO_PinState buttonState = HAL_GPIO_ReadPin(BUTTON_GPIO_Port, BUTTON_Pin);
-		if(buttonState == GPIO_PIN_RESET){
-			__HAL_TIM_CLEAR_FLAG(&htim6, TIM_SR_UIF);//Required so interrupt doesn't fire immediately on start
-			HAL_TIM_Base_Start_IT(&htim6);
-		}
-		else if(buttonState == GPIO_PIN_SET){
-			HAL_TIM_Base_Stop_IT(&htim6);
-		}
-	}
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	if(htim == &htim6){
-		buttonHeldDownLongEnough = 1;
-		HAL_TIM_Base_Stop_IT(&htim6);
-	}
-
-//	HAL_TIM_Base_Stop_IT(&htim6);
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -125,11 +104,11 @@ int main(void)
   //Setup pixels
   PixelsInfo pixelInfo;
   initPixels(&pixelInfo, WS2812B_2020, 10, sendSpiPixelDataWrapper, 10000000);
-  uint32_t pixelsRgb[] = {0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003, 0x000003};
+  uint32_t pixelsRgb[] = {0x000003, 0x000003, 0x030000, 0x030000, 0x000300, 0x000300, 0x030003, 0x030003, 0x030003, 0x030003};
   setPixelsColors(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
 
-  int patternSelector = 0;
+//  int patternSelector = 0;
 
   /* USER CODE END 2 */
 
@@ -137,14 +116,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(buttonHeldDownLongEnough){
-		  patternSelector++;
-		  if(patternSelector >= 2){
-			  patternSelector = 0;
-		  }
-		  buttonHeldDownLongEnough = 0;
-	  }
-	  displayPixelPattern(&pixelInfo, pixelsRgb, patternSelector);
+//	  if(buttonHeldDownLongEnough){
+//		  patternSelector++;
+//		  if(patternSelector >= 2){
+//			  patternSelector = 0;
+//		  }
+//		  buttonHeldDownLongEnough = 0;
+//	  }
+//	  displayPixelPattern(&pixelInfo, pixelsRgb, patternSelector);
+	  setPixelsColors(&pixelInfo, pixelsRgb);
+	  processUserInput(&pixelInfo);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
