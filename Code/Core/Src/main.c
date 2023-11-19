@@ -95,7 +95,6 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
-  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   //Setup encoder
@@ -108,7 +107,10 @@ int main(void)
   setPixelsColors(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
 
-//  int patternSelector = 0;
+  PixelPatternType patternSelector = 0;
+
+  MenuState menuState = NotInMenu;
+  MenuState prevMenuState = NotInMenu;
 
   /* USER CODE END 2 */
 
@@ -116,17 +118,23 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  if(buttonHeldDownLongEnough){
-//		  patternSelector++;
-//		  if(patternSelector >= 2){
-//			  patternSelector = 0;
-//		  }
-//		  buttonHeldDownLongEnough = 0;
-//	  }
-//	  displayPixelPattern(&pixelInfo, pixelsRgb, patternSelector);
-	  setPixelsColors(&pixelInfo, pixelsRgb);
-	  processUserInput(&pixelInfo);
+	  ButtonPressType buttonPress = processButtonInput(&pixelInfo);
+	  processMenu(&pixelInfo, buttonPress, &menuState);
 
+	  //Make sure to display a different pattern to show out of menu
+	  if(prevMenuState == InMenu && menuState == NotInMenu){
+		  for(int i=0; i<pixelInfo.numPixels; i++){
+			  pixelsRgb[i] = 0x030300;
+		  }
+		  setPixelsColors(&pixelInfo, pixelsRgb);
+	  }
+
+	  //Display moving pattern selected in menu
+	  if(menuState == NotInMenu){
+		  patternSelector = menuItemValues[PatternMoving] - 1;
+		  displayPixelPattern(&pixelInfo, pixelsRgb, patternSelector);
+	  }
+	  prevMenuState = menuState;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

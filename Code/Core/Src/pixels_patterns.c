@@ -18,7 +18,7 @@ static int colorIndex;
 void displayPixelPattern(PixelsInfo *pixelsInfo, uint32_t *pixelsRgb, PixelPatternType pixelPattern){
 	switch(pixelPattern){
 		case PIXEL_PATTERN1:{
-			currentCnt = htim1.Instance->CNT;
+			currentCnt = TIM1->CNT;
 			diffCnt = currentCnt - prevCnt;
 			//Initialize prevLedIndex to the last led index at the start of the program
 			if(prevLedIndex == -1){
@@ -47,7 +47,7 @@ void displayPixelPattern(PixelsInfo *pixelsInfo, uint32_t *pixelsRgb, PixelPatte
 		}
 
 		case PIXEL_PATTERN2:{
-			currentCnt = htim1.Instance->CNT;
+			currentCnt = TIM1->CNT;
 			if(prevCnt != currentCnt){
 				diffCnt = currentCnt - prevCnt;
 				if(diffCnt > 0){
