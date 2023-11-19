@@ -7,6 +7,18 @@ typedef enum{
 	WS2812B_2020
 }PixelsType;
 
+typedef struct {
+    float h; // Hue [0, 360]
+    float s; // Saturation [0, 1]
+    float v; // Value [0, 1]
+} Hsv;
+
+typedef struct {
+    uint8_t r; // Red [0, 255]
+    uint8_t g; // Green [0, 255]
+    uint8_t b; // Blue [0, 255]
+} Rgb;
+
 typedef struct{
 	uint32_t numPixels;
 	uint8_t *spiData;
@@ -32,6 +44,7 @@ void initPixels(
 
 void deinitPixels(PixelsInfo *pixelsInfo);
 
-void setPixelsColors(PixelsInfo *pixelInfo, uint32_t *rgb);
+void setPixelsRgb(PixelsInfo *pixelInfo, Rgb *rgb);
+void setPixelsHsv(PixelsInfo *pixelsInfo, Rgb *rgb, Hsv *hsv);
 
 #endif

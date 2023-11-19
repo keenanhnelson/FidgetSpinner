@@ -11,11 +11,11 @@ static int prevLedIndex = -1;
 static int16_t diffCnt;
 
 //Pattern2 variables
-static int colors[] = {0x0f0000, 0x000f00, 0x00000f};
-static int numColors = sizeof(colors)/sizeof(colors[0]);
+static Rgb colors[] = {{0x0f, 0x00, 0x00}, {0x00, 0x0f, 0x00}, {0x00, 0x00, 0x0f}};
+static int numColors = sizeof(colors)/sizeof(Rgb);
 static int colorIndex;
 
-void displayPixelPattern(PixelsInfo *pixelsInfo, uint32_t *pixelsRgb, PixelPatternType pixelPattern){
+void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternType pixelPattern){
 	switch(pixelPattern){
 		case PIXEL_PATTERN1:{
 			currentCnt = TIM1->CNT;
@@ -37,11 +37,11 @@ void displayPixelPattern(PixelsInfo *pixelsInfo, uint32_t *pixelsRgb, PixelPatte
 			  }
 			}
 			if(prevCnt != currentCnt){
-			  pixelsRgb[prevLedIndex] = 0x000003;
-			  pixelsRgb[currentLedIndex] = 0x0f0000;
-			  prevCnt = currentCnt;
-			  prevLedIndex = currentLedIndex;
-			  setPixelsColors(pixelsInfo, pixelsRgb);
+				pixelsRgb[prevLedIndex] = (Rgb){0x00, 0x00, 0x03};
+				pixelsRgb[currentLedIndex] = (Rgb){0x0f, 0x00, 0x00};
+				prevCnt = currentCnt;
+				prevLedIndex = currentLedIndex;
+				setPixelsRgb(pixelsInfo, pixelsRgb);
 			}
 			break;
 		}
@@ -65,7 +65,7 @@ void displayPixelPattern(PixelsInfo *pixelsInfo, uint32_t *pixelsRgb, PixelPatte
 			  for(int i=0; i<pixelsInfo->numPixels; i++){
 				  pixelsRgb[i] = colors[colorIndex];
 			  }
-			  setPixelsColors(pixelsInfo, pixelsRgb);
+			  setPixelsRgb(pixelsInfo, pixelsRgb);
 			  prevCnt = currentCnt;
 			}
 			break;

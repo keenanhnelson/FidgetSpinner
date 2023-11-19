@@ -11,7 +11,7 @@ typedef enum{
 }ButtonState;
 
 uint8_t menuItemValues[NumMenuItems] = {1, 1, 1};
-static uint32_t menuItemColors[NumMenuItems] = {0x030000, 0x000300, 0x000003};
+static Rgb menuItemColors[NumMenuItems] = {{0x03, 0x00, 0x00}, {0x00, 0x03, 0x00}, {0x00, 0x00, 0x03}};
 static int16_t currentCnt = 0;
 static int16_t prevCnt = 0;
 static int16_t diffCnt = 0;
@@ -22,12 +22,12 @@ static ButtonState prevButtonState = ButtonUp;
 static MenuItem menuItem = 0;
 
 //Used to display the value of variable to the user
-void displayLedCntAndColor(PixelsInfo *pixelInfo, uint8_t ledCnt, uint32_t rgbColor){
-	uint32_t *rgb = calloc(pixelInfo->numPixels, sizeof(uint32_t));
+void displayLedCntAndColor(PixelsInfo *pixelInfo, uint8_t ledCnt, Rgb rgbColor){
+	Rgb *rgb = calloc(pixelInfo->numPixels, sizeof(Rgb));
 	for(int i=0; i<ledCnt; i++){
 		rgb[i] = rgbColor;
 	}
-	setPixelsColors(pixelInfo, rgb);
+	setPixelsRgb(pixelInfo, rgb);
 	free(rgb);
 }
 

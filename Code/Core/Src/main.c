@@ -103,8 +103,8 @@ int main(void)
   //Setup pixels
   PixelsInfo pixelInfo;
   initPixels(&pixelInfo, WS2812B_2020, 10, sendSpiPixelDataWrapper, 10000000);
-  uint32_t pixelsRgb[] = {0x000003, 0x000003, 0x030000, 0x030000, 0x000300, 0x000300, 0x030003, 0x030003, 0x030003, 0x030003};
-  setPixelsColors(&pixelInfo, pixelsRgb);
+  Rgb pixelsRgb[] = {{0x00, 0x00, 0x03}, {0x00, 0x00, 0x03}, {0x03, 0x00, 0x00}, {0x03, 0x00, 0x00}, {0x00, 0x03, 0x00}, {0x00, 0x03, 0x00}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, };
+  setPixelsRgb(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
 
   PixelPatternType patternSelector = 0;
@@ -124,9 +124,9 @@ int main(void)
 	  //Make sure to display a different pattern to show out of menu
 	  if(prevMenuState == InMenu && menuState == NotInMenu){
 		  for(int i=0; i<pixelInfo.numPixels; i++){
-			  pixelsRgb[i] = 0x030300;
+			  pixelsRgb[i] = (Rgb){0x03, 0x03, 0x00};
 		  }
-		  setPixelsColors(&pixelInfo, pixelsRgb);
+		  setPixelsRgb(&pixelInfo, pixelsRgb);
 	  }
 
 	  //Display moving pattern selected in menu

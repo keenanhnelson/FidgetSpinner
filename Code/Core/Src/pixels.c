@@ -45,17 +45,44 @@ void deinitPixels(PixelsInfo *pixelsInfo){
 	free(pixelsInfo->spiData);
 }
 
-void setPixelsColors(PixelsInfo *pixelInfo, uint32_t *rgb){
+Rgb hsvToRgb(Hsv hsv) {
+    Rgb rgb;
+    int i;
+    float f, p, q, t;
+
+    if (hsv.s == 0) {
+        // Achromatic (gray)
+        rgb.r = rgb.g = rgb.b = (int)(hsv.v * 255);
+        return rgb;
+    }
+
+    hsv.h /= 60; // sector 0 to 5
+    i = (int)hsv.h;
+    f = hsv.h - i; // factorial part of h
+    p = hsv.v * (1 - hsv.s);
+    q = hsv.v * (1 - hsv.s * f);
+    t = hsv.v * (1 - hsv.s * (1 - f));
+
+    switch (i) {
+        case 0: rgb.r = hsv.v * 255; rgb.g = t * 255; rgb.b = p * 255; break;
+        case 1: rgb.r = q * 255; rgb.g = hsv.v * 255; rgb.b = p * 255; break;
+        case 2: rgb.r = p * 255; rgb.g = hsv.v * 255; rgb.b = t * 255; break;
+        case 3: rgb.r = p * 255; rgb.g = q * 255; rgb.b = hsv.v * 255; break;
+        case 4: rgb.r = t * 255; rgb.g = p * 255; rgb.b = hsv.v * 255; break;
+        default: rgb.r = hsv.v * 255; rgb.g = p * 255; rgb.b = q * 255; break;
+    }
+
+    return rgb;
+}
+
+void setPixelsRgb(PixelsInfo *pixelsInfo, Rgb *rgb){
     //First make sure the all the bytes start off zero so only setting bits is required
-	memset(pixelInfo->spiData, 0, pixelInfo->totalNumSpiBytesToSend);
+	memset(pixelsInfo->spiData, 0, pixelsInfo->totalNumSpiBytesToSend);
 
 	uint32_t pixelDataBitIndex = 0;
-    for(int k=0; k<pixelInfo->numPixels; k++){
+    for(int k=0; k<pixelsInfo->numPixels; k++){
         //Convert rgb to grb color which is needed by the smart pixel
-        uint8_t r = (uint8_t)((rgb[k] >> 16) & 0xFF);
-        uint8_t g = (uint8_t)((rgb[k] >> 8) & 0xFF);
-        uint8_t b = (uint8_t)((rgb[k] >> 0) & 0xFF);
-        uint32_t dataToSend = (g << 16) | (r << 8) | (b<<0);
+        uint32_t dataToSend = (rgb[k].g << 16) | (rgb[k].r << 8) | (rgb[k].b << 0);
 
         //Generate bit stream
         for(int i=0; i<24; i++){//24 bits for one pixel
@@ -64,16 +91,16 @@ void setPixelsColors(PixelsInfo *pixelInfo, uint32_t *rgb){
             int byteIndex, subBitIndex;//Used to determine spi location
             uint8_t numOfHighSpiBits;
             if(colorBit == 0){
-            	numOfHighSpiBits = pixelInfo->numSpiBitsHighFor0;
+            	numOfHighSpiBits = pixelsInfo->numSpiBitsHighFor0;
             }
             else{
-            	numOfHighSpiBits = pixelInfo->numSpiBitsHighFor1;
+            	numOfHighSpiBits = pixelsInfo->numSpiBitsHighFor1;
             }
-            for(int j=0; j<pixelInfo->numSpiBitsPerPixel; j++){//Number of spi bits in one smart pixel bit
+            for(int j=0; j<pixelsInfo->numSpiBitsPerPixel; j++){//Number of spi bits in one smart pixel bit
                 byteIndex = pixelDataBitIndex / 8;//Determines current spi byte
                 subBitIndex = 7 - (pixelDataBitIndex % 8);//Determines which bit needs to be change in the current spi byte
                 if(j<numOfHighSpiBits){//how many spi bits is the signal high for
-                	pixelInfo->spiData[byteIndex] |= 1 << subBitIndex;//logic high
+                	pixelsInfo->spiData[byteIndex] |= 1 << subBitIndex;//logic high
                 }else{
 //                    pixelInfo->spiData[byteIndex] &= ~(1 << subBitIndex);//logic low
                 }
@@ -83,5 +110,12 @@ void setPixelsColors(PixelsInfo *pixelInfo, uint32_t *rgb){
     }
 
     //Transmit all the data needed to light up all of the smart pixels
-    pixelInfo->sendSpiData(pixelInfo->spiData, pixelInfo->totalNumSpiBytesToSend);
+    pixelsInfo->sendSpiData(pixelsInfo->spiData, pixelsInfo->totalNumSpiBytesToSend);
+}
+
+void setPixelsHsv(PixelsInfo *pixelsInfo, Rgb *rgb, Hsv *hsv){
+	for(int i=0; i<pixelsInfo->numPixels; i++){
+		rgb[i] = hsvToRgb(hsv[i]);
+	}
+	setPixelsRgb(pixelsInfo, rgb);
 }
