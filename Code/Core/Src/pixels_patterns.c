@@ -1,9 +1,11 @@
 #include "pixels_patterns.h"
 #include "tim.h"
+#include "revolution_speed.h"
+#include <math.h>
 
 //General variables
 static int16_t currentCnt;
-static int prevCnt = -1;
+static int16_t prevCnt = -1;
 
 //Pattern1 variables
 static int currentLedIndex = -1;
@@ -12,13 +14,24 @@ static int16_t diffCnt;
 
 //Pattern2 variables
 static Hsv colors[] = {{45, 1, 0.1f}, {135, 1, 0.1f}, {225, 1, 0.1f}, {315, 1, 0.1f}, };
-static int numColors = sizeof(colors)/sizeof(Hsv);
+static int numColors = sizeof(colors)/sizeof(colors[0]);
 static int colorIndex = 0;
+
+//Pattern3 variables
+static float currentRpm = 0;
+static float prevRpm = 0;
+static float lowToHighRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass whem coming from low rpm to high rpm before changing color
+static float highToLowRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass when coming from high rpm to low rpm before changing color
+static int numBoundaries = sizeof(lowToHighRpmBoundaries)/sizeof(lowToHighRpmBoundaries[0]);
+static Hsv areaColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1, 0.1f},};
+//static int numAreas = sizeof(areaColors)/sizeof(areaColors[0]);
+static int currentAreaIndex = 0;
+static int prevAreaIndex = sizeof(areaColors)/sizeof(areaColors[0]) - 1;
 
 void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternType pixelPattern){
 	switch(pixelPattern){
-		case PIXEL_PATTERN1:{
-			currentCnt = TIM1->CNT;
+		case PIXEL_PATTERN3:{
+			currentCnt = getEncoderCnt();
 			diffCnt = currentCnt - prevCnt;
 			//Initialize prevLedIndex to the last led index at the start of the program
 			if(prevLedIndex == -1){
@@ -55,7 +68,7 @@ void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternTyp
 		}
 
 		case PIXEL_PATTERN2:{
-			currentCnt = TIM1->CNT;
+			currentCnt = getEncoderCnt();
 			if(prevCnt != currentCnt){
 				diffCnt = currentCnt - prevCnt;
 				if(diffCnt > 0){
@@ -80,18 +93,39 @@ void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternTyp
 			break;
 		}
 
-//		case PIXEL_PATTERN3:{
-//			currentCnt = TIM1->CNT;
-//			if(prevCnt != currentCnt){
-//				diffCnt = currentCnt - prevCnt;
-//
-//			  for(int i=0; i<pixelsInfo->numPixels; i++){
-//				  pixelsRgb[i] = colors[colorIndex];
-//			  }
-//			  setPixelsRgb(pixelsInfo, pixelsRgb);
-//			  prevCnt = currentCnt;
-//			}
-//			break;
-//		}
+		case PIXEL_PATTERN1:{
+			currentRpm = fabsf(getRpm());
+			uint8_t foundBoundaryCrossing = 0;
+
+			//First check if currentRpm has passed any higher boundaries
+			for(int i=prevAreaIndex; i<numBoundaries; i++){
+				if(currentRpm > lowToHighRpmBoundaries[i]){
+					currentAreaIndex = i + 1;
+					foundBoundaryCrossing = 1;
+				}
+			}
+
+			//If current rpm hasn't passed any higher boundaries check if it has decreased passed any lower boundaries
+			if(!foundBoundaryCrossing){
+				for(int i=prevAreaIndex-1; i>=0; i--){
+					if(currentRpm < highToLowRpmBoundaries[i]){
+						currentAreaIndex = i;
+						foundBoundaryCrossing = 1;
+					}
+				}
+			}
+
+			if(currentAreaIndex != prevAreaIndex){
+				Rgb color = hsvToRgb(areaColors[currentAreaIndex]);
+				for(int i=0; i<pixelsInfo->numPixels; i++){
+					pixelsRgb[i] = color;
+				}
+				setPixelsRgb(pixelsInfo, pixelsRgb);
+				prevAreaIndex = currentAreaIndex;
+			}
+
+			prevRpm = currentRpm;
+			break;
+		}
 	}
 }

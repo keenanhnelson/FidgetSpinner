@@ -32,6 +32,7 @@
 #include "pixels_spi_wrapper.h"
 #include "pixels_patterns.h"
 #include "user_interface.h"
+#include "revolution_speed.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,10 +96,10 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
-  //Setup encoder
-  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_1);
+  initRevolutionSpeed();
 
   //Setup pixels
   PixelsInfo pixelInfo;
@@ -106,6 +107,16 @@ int main(void)
   Rgb pixelsRgb[] = {{0x00, 0x00, 0x03}, {0x00, 0x00, 0x03}, {0x03, 0x00, 0x00}, {0x03, 0x00, 0x00}, {0x00, 0x03, 0x00}, {0x00, 0x03, 0x00}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, };
   setPixelsRgb(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
+
+  Hsv hsvColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1, 0.1f},};
+  for(int ii=0; ii<sizeof(hsvColors)/sizeof(hsvColors[0]); ii++){
+	  Rgb color = hsvToRgb(hsvColors[ii]);
+	  for(int i=0; i<pixelInfo.numPixels; i++){
+		  pixelsRgb[i] = color;
+	  }
+	  setPixelsRgb(&pixelInfo, pixelsRgb);
+  }
+
 
   PixelPatternType patternSelector = 0;
 
