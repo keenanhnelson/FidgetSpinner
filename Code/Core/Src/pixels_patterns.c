@@ -10,10 +10,19 @@ static int16_t prevCnt = -1;
 static uint32_t currentTime = 0;
 static float currentRpm = 0;
 static float prevRpm = 0;
+static uint8_t prevMenuBrightness = 255;
+static float menuBrightnessToValue[10] = {0.01f, 0.025f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.8f, 1.0f};
+static float brightness = -1;
 
 void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuItemValues){
 	currentRpm = fabsf(getRpm());
 	currentTime = HAL_GetTick();
+
+	if(menuItemValues[Brightness] != prevMenuBrightness){
+		brightness = menuBrightnessToValue[menuItemValues[Brightness]];//Map menu brightness to a range between 0 and 1
+		prevMenuBrightness = menuItemValues[Brightness];
+	}
+
 	if(currentRpm > 100){
 		//Display moving pattern selected in menu
 		MovingPixelPatternType movingPattern = menuItemValues[PatternMoving];
@@ -64,6 +73,7 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			}
 			if(prevCnt != currentCnt){
 				pixelsRgb[prevLedIndex] = (Rgb){0x00, 0x00, 0x03};
+				colors[colorIndex].v = brightness;//Update brightness with menu selected value
 				pixelsRgb[currentLedIndex] = hsvToRgb(colors[colorIndex]);
 				prevCnt = currentCnt;
 				prevLedIndex = currentLedIndex;
@@ -93,6 +103,7 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 						colorIndex = numColors-1;
 					}
 				}
+				colors[colorIndex].v = brightness;//Update brightness with menu selected value
 				Rgb color = hsvToRgb(colors[colorIndex]);
 				for(int i=0; i<pixelsInfo->numPixels; i++){
 					pixelsRgb[i] = color;
@@ -133,6 +144,7 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			}
 
 			if(currentAreaIndex != prevAreaIndex){
+				areaColors[currentAreaIndex].v = brightness;//Update brightness with menu selected value
 				Rgb color = hsvToRgb(areaColors[currentAreaIndex]);
 				for(int i=0; i<pixelsInfo->numPixels; i++){
 					pixelsRgb[i] = color;
@@ -160,7 +172,7 @@ void displayStationaryPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, Stati
 
 			rotatingHue = fmodf((rotatingHue + 5), 360.0f);
 
-			Rgb color = hsvToRgb((Hsv){rotatingHue, 1, 0.1f});
+			Rgb color = hsvToRgb((Hsv){rotatingHue, 1, brightness});
 			for(int i=0; i<pixelsInfo->numPixels; i++){
 				pixelsRgb[i] = color;
 			}
