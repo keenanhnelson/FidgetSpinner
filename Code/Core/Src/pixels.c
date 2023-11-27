@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cmsis_gcc.h"
+#include "stm32l4xx_hal.h"
 
 void initPixels(
 		PixelsInfo *pixelInfo,
@@ -111,7 +111,12 @@ void setPixelsRgb(PixelsInfo *pixelsInfo, Rgb *rgb){
     }
 
     //Transmit all the data needed to light up all of the smart pixels
+    HAL_SuspendTick();
+    HAL_NVIC_DisableIRQ(TIM6_IRQn);
     pixelsInfo->sendSpiData(pixelsInfo->spiData, pixelsInfo->totalNumSpiBytesToSend);
+    HAL_ResumeTick();
+    HAL_NVIC_EnableIRQ(TIM6_IRQn);
+
 }
 
 void setPixelsHsv(PixelsInfo *pixelsInfo, Rgb *rgb, Hsv *hsv){
