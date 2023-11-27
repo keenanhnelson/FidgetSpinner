@@ -108,17 +108,16 @@ int main(void)
   setPixelsRgb(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
 
-  Hsv hsvColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1, 0.1f},};
-  for(int ii=0; ii<sizeof(hsvColors)/sizeof(hsvColors[0]); ii++){
-	  Rgb color = hsvToRgb(hsvColors[ii]);
-	  for(int i=0; i<pixelInfo.numPixels; i++){
-		  pixelsRgb[i] = color;
-	  }
-	  setPixelsRgb(&pixelInfo, pixelsRgb);
-  }
-
-
-  PixelPatternType patternSelector = 0;
+//  //More test colors to indicate the leds are working
+//  Hsv hsvColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1, 0.1f},};
+//  for(int ii=0; ii<sizeof(hsvColors)/sizeof(hsvColors[0]); ii++){
+//	  Rgb color = hsvToRgb(hsvColors[ii]);
+//	  for(int i=0; i<pixelInfo.numPixels; i++){
+//		  pixelsRgb[i] = color;
+//	  }
+//	  setPixelsRgb(&pixelInfo, pixelsRgb);
+//	  HAL_Delay(500);
+//  }
 
   MenuState menuState = NotInMenu;
   MenuState prevMenuState = NotInMenu;
@@ -140,11 +139,11 @@ int main(void)
 		  setPixelsRgb(&pixelInfo, pixelsRgb);
 	  }
 
-	  //Display moving pattern selected in menu
 	  if(menuState == NotInMenu){
-		  patternSelector = menuItemValues[PatternMoving] - 1;
-		  displayPixelPattern(&pixelInfo, pixelsRgb, patternSelector);
+		  //Display patterns for moving or stationary
+		  displayPixelPattern(&pixelInfo, pixelsRgb, menuItemValues);
 	  }
+
 	  prevMenuState = menuState;
     /* USER CODE END WHILE */
 

@@ -2,6 +2,7 @@
 #include "tim.h"
 #include "revolution_speed.h"
 #include <math.h>
+#include "user_interface.h"
 
 //General variables
 static int16_t currentCnt;
@@ -28,7 +29,29 @@ static Hsv areaColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1,
 static int currentAreaIndex = 0;
 static int prevAreaIndex = sizeof(areaColors)/sizeof(areaColors[0]) - 1;
 
-void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternType pixelPattern){
+//Stationary pattern variables
+//Pattern1
+static uint32_t currentTime = 0;
+static uint32_t nextTimeAction = 0;
+static uint32_t betweenTime = 100;
+static float rotatingHue = 0;//0-360
+
+void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuItemValues){
+	currentRpm = fabsf(getRpm());
+	currentTime = HAL_GetTick();
+	if(currentRpm > 100){
+		//Display moving pattern selected in menu
+		MovingPixelPatternType movingPattern = menuItemValues[PatternMoving] - 1;
+		displayMovingPixelPattern(pixelInfo, pixelsRgb, movingPattern);
+	}
+	else{
+		//Display stationary pattern
+		StationaryPixelPatternType stationaryPattern = menuItemValues[PatternStationary] - 1;
+		displayStationaryPixelPattern(pixelInfo, pixelsRgb, stationaryPattern);
+	}
+}
+
+void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPixelPatternType pixelPattern){
 	switch(pixelPattern){
 		case PIXEL_PATTERN3:{
 			currentCnt = getEncoderCnt();
@@ -94,7 +117,7 @@ void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternTyp
 		}
 
 		case PIXEL_PATTERN1:{
-			currentRpm = fabsf(getRpm());
+
 			uint8_t foundBoundaryCrossing = 0;
 
 			//First check if currentRpm has passed any higher boundaries
@@ -125,6 +148,37 @@ void displayPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, PixelPatternTyp
 			}
 
 			prevRpm = currentRpm;
+			break;
+		}
+	}
+}
+
+void displayStationaryPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, StationaryPixelPatternType pixelPattern){
+	switch(pixelPattern){
+		case STATIONARY_PATTERN1:{
+			if(currentTime < nextTimeAction){
+				break;
+			}
+
+			rotatingHue = fmodf((rotatingHue + 5), 360.0f);
+
+			Rgb color = hsvToRgb((Hsv){rotatingHue, 1, 0.1f});
+			for(int i=0; i<pixelsInfo->numPixels; i++){
+				pixelsRgb[i] = color;
+			}
+			setPixelsRgb(pixelsInfo, pixelsRgb);
+
+			nextTimeAction = currentTime + betweenTime;
+			break;
+		}
+
+		case STATIONARY_PATTERN2:{
+
+			break;
+		}
+
+		case STATIONARY_PATTERN3:{
+
 			break;
 		}
 	}

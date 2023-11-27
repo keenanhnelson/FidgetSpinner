@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include "cmsis_gcc.h"
 
 void initPixels(
 		PixelsInfo *pixelInfo,
