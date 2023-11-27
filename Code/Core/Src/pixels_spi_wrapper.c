@@ -4,5 +4,5 @@
 //Wrap platform dependent spi code goes here
 
 void sendSpiPixelDataWrapper(uint8_t *data, uint32_t len){
-	HAL_SPI_Transmit(&hspi1, data, len, 1000);
+	HAL_SPI_Transmit_DMA(&hspi1, data, len);
 }
