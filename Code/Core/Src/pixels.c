@@ -111,11 +111,7 @@ void setPixelsRgb(PixelsInfo *pixelsInfo, Rgb *rgb){
     }
 
     //Transmit all the data needed to light up all of the smart pixels
-    HAL_SuspendTick();
-    HAL_NVIC_DisableIRQ(TIM6_IRQn);
     pixelsInfo->sendSpiData(pixelsInfo->spiData, pixelsInfo->totalNumSpiBytesToSend);
-    HAL_ResumeTick();
-    HAL_NVIC_EnableIRQ(TIM6_IRQn);
 
 }
 

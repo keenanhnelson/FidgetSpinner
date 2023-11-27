@@ -15,7 +15,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim6){
 		currentCnt = getEncoderCnt();
 		diffCnt = currentCnt - prevCnt;
-		rpm = ((float)diffCnt*60.0f)/((float)NUM_MAGNETS*REV_TIME_S);
 		prevCnt = currentCnt;
 	}
 }
@@ -37,5 +36,6 @@ int16_t getEncoderCnt(){
 }
 
 float getRpm(){
+	rpm = ((float)diffCnt*60.0f)/((float)NUM_MAGNETS*REV_TIME_S);
 	return rpm;
 }
