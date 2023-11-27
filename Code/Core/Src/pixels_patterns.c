@@ -16,12 +16,12 @@ void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuIte
 	currentTime = HAL_GetTick();
 	if(currentRpm > 100){
 		//Display moving pattern selected in menu
-		MovingPixelPatternType movingPattern = menuItemValues[PatternMoving] - 1;
+		MovingPixelPatternType movingPattern = menuItemValues[PatternMoving];
 		displayMovingPixelPattern(pixelInfo, pixelsRgb, movingPattern);
 	}
 	else{
 		//Display stationary pattern
-		StationaryPixelPatternType stationaryPattern = menuItemValues[PatternStationary] - 1;
+		StationaryPixelPatternType stationaryPattern = menuItemValues[PatternStationary];
 		displayStationaryPixelPattern(pixelInfo, pixelsRgb, stationaryPattern);
 	}
 }

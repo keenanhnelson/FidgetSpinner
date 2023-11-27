@@ -10,7 +10,7 @@ typedef enum{
 	ButtonUp
 }ButtonState;
 
-uint8_t menuItemValues[NumMenuItems] = {1, 1, 1};
+uint8_t menuItemValues[NumMenuItems] = {0};
 static Rgb menuItemColors[NumMenuItems] = {{0x03, 0x00, 0x00}, {0x00, 0x03, 0x00}, {0x00, 0x00, 0x03}};
 static int16_t currentCnt = 0;
 static int16_t prevCnt = 0;
@@ -29,6 +29,12 @@ void displayLedCntAndColor(PixelsInfo *pixelInfo, uint8_t ledCnt, Rgb rgbColor){
 	}
 	setPixelsRgb(pixelInfo, rgb);
 	free(rgb);
+}
+
+void displayMenuValue(PixelsInfo *pixelInfo, uint8_t menuValue, Rgb rgbColor){
+	uint8_t menuDisplayValue = menuValue + 1;//A value of zero will have one led turned on
+	assert(menuDisplayValue <= pixelInfo->numPixels);//Make sure the menu value doesn't exceed the number of display leds
+	displayLedCntAndColor(pixelInfo, menuDisplayValue, rgbColor);
 }
 
 //Processes the button press for either short or long presses
@@ -70,7 +76,7 @@ void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *
 		menuItem = 0;
 		prevCnt = TIM1->CNT;
 		*menuState = InMenu;
-		displayLedCntAndColor(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
+		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
 	}
 	//Or if already in a menu and short button press then show next menu item
 	else if(*menuState == InMenu && buttonPress == ButtonShortPress){
@@ -78,7 +84,7 @@ void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *
 		if(menuItem >= NumMenuItems){
 			menuItem = 0;
 		}
-		displayLedCntAndColor(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
+		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
 	}
 
 	//Change state to NotInMenu on long button press
@@ -97,12 +103,12 @@ void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *
 	prevCnt = currentCnt;
 	if(diffCnt != 0){
 		menuItemValues[menuItem] += diffCnt;
-		if(menuItemValues[menuItem] < 1){
-			menuItemValues[menuItem] = 1;
+		if(menuItemValues[menuItem] < 0){
+			menuItemValues[menuItem] = 0;
 		}
-		else if(menuItemValues[menuItem] > 10){
-			menuItemValues[menuItem] = 10;
+		else if(menuItemValues[menuItem] > 9){
+			menuItemValues[menuItem] = 9;
 		}
-		displayLedCntAndColor(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
+		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
 	}
 }
