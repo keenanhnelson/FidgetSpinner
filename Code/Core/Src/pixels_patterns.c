@@ -10,18 +10,13 @@ static int16_t prevCnt = -1;
 static uint32_t currentTime = 0;
 static float currentRpm = 0;
 static float prevRpm = 0;
-static uint8_t prevMenuBrightness = 255;
-static float menuBrightnessToValue[10] = {0.01f, 0.025f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.8f, 1.0f};
 static float brightness = -1;
 
 void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuItemValues){
 	currentRpm = fabsf(getRpm());
 	currentTime = HAL_GetTick();
 
-	if(menuItemValues[Brightness] != prevMenuBrightness){
-		brightness = menuBrightnessToValue[menuItemValues[Brightness]];//Map menu brightness to a range between 0 and 1
-		prevMenuBrightness = menuItemValues[Brightness];
-	}
+	brightness = menuBrightnessToValue[menuItemValues[Brightness]];//Map menu brightness to a range between 0 and 1
 
 	if(currentRpm > 100){
 		//Display moving pattern selected in menu

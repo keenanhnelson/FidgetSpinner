@@ -22,6 +22,7 @@ typedef enum{
 }MenuItem;
 
 extern uint8_t menuItemValues[NumMenuItems];
+extern const float menuBrightnessToValue[10];
 
 ButtonPressType processButtonInput();
 void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *menuState);

@@ -11,7 +11,7 @@ typedef enum{
 }ButtonState;
 
 uint8_t menuItemValues[NumMenuItems] = {0};
-static Rgb menuItemColors[NumMenuItems] = {{0x03, 0x00, 0x00}, {0x00, 0x03, 0x00}, {0x00, 0x00, 0x03}};
+static Hsv menuItemColors[NumMenuItems] = {{0.0f, 1.0f, 0.05f}, {90.0f, 1.0f, 0.05f}, {180.0f, 1.0f, 0.05f}};
 static int16_t currentCnt = 0;
 static int16_t prevCnt = 0;
 static int16_t diffCnt = 0;
@@ -21,20 +21,23 @@ static uint32_t buttonHeldDownDuration = 0;
 static ButtonState prevButtonState = ButtonUp;
 static MenuItem menuItem = 0;
 
+const float menuBrightnessToValue[10] = {0.01f, 0.025f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.8f, 1.0f};//Converts int menu value to hsv value
+
 //Used to display the value of variable to the user
-void displayLedCntAndColor(PixelsInfo *pixelInfo, uint8_t ledCnt, Rgb rgbColor){
+void displayLedCntAndColor(PixelsInfo *pixelInfo, uint8_t ledCnt, Hsv color){
 	Rgb *rgb = calloc(pixelInfo->numPixels, sizeof(Rgb));
+	Rgb colorRgb = hsvToRgb(color);
 	for(int i=0; i<ledCnt; i++){
-		rgb[i] = rgbColor;
+		rgb[i] = colorRgb;
 	}
 	setPixelsRgb(pixelInfo, rgb);
 	free(rgb);
 }
 
-void displayMenuValue(PixelsInfo *pixelInfo, uint8_t menuValue, Rgb rgbColor){
+void displayMenuValue(PixelsInfo *pixelInfo, uint8_t menuValue, Hsv color){
 	uint8_t menuDisplayValue = menuValue + 1;//A value of zero will have one led turned on
 	assert(menuDisplayValue <= pixelInfo->numPixels);//Make sure the menu value doesn't exceed the number of display leds
-	displayLedCntAndColor(pixelInfo, menuDisplayValue, rgbColor);
+	displayLedCntAndColor(pixelInfo, menuDisplayValue, color);
 }
 
 //Processes the button press for either short or long presses
@@ -76,6 +79,7 @@ void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *
 		menuItem = 0;
 		prevCnt = TIM1->CNT;
 		*menuState = InMenu;
+		menuItemColors[menuItem].v = menuBrightnessToValue[menuItemValues[Brightness]];
 		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
 	}
 	//Or if already in a menu and short button press then show next menu item
@@ -84,6 +88,7 @@ void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *
 		if(menuItem >= NumMenuItems){
 			menuItem = 0;
 		}
+		menuItemColors[menuItem].v = menuBrightnessToValue[menuItemValues[Brightness]];
 		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
 	}
 
@@ -109,6 +114,7 @@ void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *
 		else if(menuItemValues[menuItem] > 9){
 			menuItemValues[menuItem] = 9;
 		}
+		menuItemColors[menuItem].v = menuBrightnessToValue[menuItemValues[Brightness]];
 		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
 	}
 }
