@@ -15,7 +15,7 @@ typedef enum{
 	STATIONARY_PATTERN3
 }StationaryPixelPatternType;
 
-void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuItemValues);
+void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, int8_t *menuItemValues);
 void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPixelPatternType pixelPattern);
 void displayStationaryPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, StationaryPixelPatternType pixelPattern);
 

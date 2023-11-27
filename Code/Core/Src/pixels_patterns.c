@@ -12,7 +12,7 @@ static float currentRpm = 0;
 static float prevRpm = 0;
 static float brightness = -1;
 
-void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuItemValues){
+void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, int8_t *menuItemValues){
 	currentRpm = fabsf(getRpm());
 	currentTime = HAL_GetTick();
 

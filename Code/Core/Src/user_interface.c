@@ -10,7 +10,7 @@ typedef enum{
 	ButtonUp
 }ButtonState;
 
-uint8_t menuItemValues[NumMenuItems] = {0};
+int8_t menuItemValues[NumMenuItems] = {0};
 static Hsv menuItemColors[NumMenuItems] = {{0.0f, 1.0f, 0.05f}, {90.0f, 1.0f, 0.05f}, {180.0f, 1.0f, 0.05f}};
 static int16_t currentCnt = 0;
 static int16_t prevCnt = 0;
