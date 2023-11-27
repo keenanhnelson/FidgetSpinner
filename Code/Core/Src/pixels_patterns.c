@@ -7,34 +7,9 @@
 //General variables
 static int16_t currentCnt;
 static int16_t prevCnt = -1;
-
-//Pattern1 variables
-static int currentLedIndex = -1;
-static int prevLedIndex = -1;
-static int16_t diffCnt;
-
-//Pattern2 variables
-static Hsv colors[] = {{45, 1, 0.1f}, {135, 1, 0.1f}, {225, 1, 0.1f}, {315, 1, 0.1f}, };
-static int numColors = sizeof(colors)/sizeof(colors[0]);
-static int colorIndex = 0;
-
-//Pattern3 variables
+static uint32_t currentTime = 0;
 static float currentRpm = 0;
 static float prevRpm = 0;
-static float lowToHighRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass whem coming from low rpm to high rpm before changing color
-static float highToLowRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass when coming from high rpm to low rpm before changing color
-static int numBoundaries = sizeof(lowToHighRpmBoundaries)/sizeof(lowToHighRpmBoundaries[0]);
-static Hsv areaColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1, 0.1f},};
-//static int numAreas = sizeof(areaColors)/sizeof(areaColors[0]);
-static int currentAreaIndex = 0;
-static int prevAreaIndex = sizeof(areaColors)/sizeof(areaColors[0]) - 1;
-
-//Stationary pattern variables
-//Pattern1
-static uint32_t currentTime = 0;
-static uint32_t nextTimeAction = 0;
-static uint32_t betweenTime = 100;
-static float rotatingHue = 0;//0-360
 
 void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuItemValues){
 	currentRpm = fabsf(getRpm());
@@ -54,6 +29,13 @@ void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, uint8_t *menuIte
 void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPixelPatternType pixelPattern){
 	switch(pixelPattern){
 		case PIXEL_PATTERN3:{
+			static int currentLedIndex = -1;
+			static int prevLedIndex = -1;
+			static int16_t diffCnt;
+			static Hsv colors[] = {{45, 1, 0.1f}, {135, 1, 0.1f}, {225, 1, 0.1f}, {315, 1, 0.1f}, };
+			static int numColors = sizeof(colors)/sizeof(colors[0]);
+			static int colorIndex = 0;
+
 			currentCnt = getEncoderCnt();
 			diffCnt = currentCnt - prevCnt;
 			//Initialize prevLedIndex to the last led index at the start of the program
@@ -91,6 +73,11 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 		}
 
 		case PIXEL_PATTERN2:{
+			static Hsv colors[] = {{45, 1, 0.1f}, {135, 1, 0.1f}, {225, 1, 0.1f}, {315, 1, 0.1f}, };
+			static int numColors = sizeof(colors)/sizeof(colors[0]);
+			static int16_t diffCnt;
+			static int colorIndex = 0;
+
 			currentCnt = getEncoderCnt();
 			if(prevCnt != currentCnt){
 				diffCnt = currentCnt - prevCnt;
@@ -117,6 +104,13 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 		}
 
 		case PIXEL_PATTERN1:{
+			static float lowToHighRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass whem coming from low rpm to high rpm before changing color
+			static float highToLowRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass when coming from high rpm to low rpm before changing color
+			static int numBoundaries = sizeof(lowToHighRpmBoundaries)/sizeof(lowToHighRpmBoundaries[0]);
+			static Hsv areaColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1, 0.1f},};
+			//static int numAreas = sizeof(areaColors)/sizeof(areaColors[0]);
+			static int currentAreaIndex = 0;
+			static int prevAreaIndex = sizeof(areaColors)/sizeof(areaColors[0]) - 1;
 
 			uint8_t foundBoundaryCrossing = 0;
 
@@ -156,6 +150,10 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 void displayStationaryPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, StationaryPixelPatternType pixelPattern){
 	switch(pixelPattern){
 		case STATIONARY_PATTERN1:{
+			static uint32_t nextTimeAction = 0;
+			static uint32_t betweenTime = 50;
+			static float rotatingHue = 0;//0-360
+
 			if(currentTime < nextTimeAction){
 				break;
 			}
