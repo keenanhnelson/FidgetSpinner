@@ -159,6 +159,26 @@ void displayStationaryPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, Stati
 		case STATIONARY_PATTERN1:{
 			static uint32_t nextTimeAction = 0;
 			static uint32_t betweenTime = 50;
+			static float rotatingHue[10] = {0, 20, 40, 80, 100, 120, 140, 160, 180, 200};//0-360
+
+			if(currentTime < nextTimeAction){
+				break;
+			}
+
+			for(int i=0; i<pixelsInfo->numPixels; i++){
+				rotatingHue[i] = fmodf((rotatingHue[i] + 5), 360.0f);
+				Rgb color = hsvToRgb((Hsv){rotatingHue[i], 1, brightness});
+				pixelsRgb[i] = color;
+			}
+			setPixelsRgb(pixelsInfo, pixelsRgb);
+
+			nextTimeAction = currentTime + betweenTime;
+			break;
+		}
+
+		case STATIONARY_PATTERN2:{
+			static uint32_t nextTimeAction = 0;
+			static uint32_t betweenTime = 50;
 			static float rotatingHue = 0;//0-360
 
 			if(currentTime < nextTimeAction){
@@ -174,11 +194,6 @@ void displayStationaryPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, Stati
 			setPixelsRgb(pixelsInfo, pixelsRgb);
 
 			nextTimeAction = currentTime + betweenTime;
-			break;
-		}
-
-		case STATIONARY_PATTERN2:{
-
 			break;
 		}
 
