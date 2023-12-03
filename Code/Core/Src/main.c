@@ -35,7 +35,6 @@
 #include "pixels_patterns.h"
 #include "user_interface.h"
 #include "revolution_speed.h"
-#include "eeprom_emul.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -104,27 +103,25 @@ int main(void)
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
-  EE_Status ee_status = EE_OK;
-  HAL_FLASH_Unlock();
-  ee_status = EE_Init(EE_FORCED_ERASE);
-  if(ee_status != EE_OK) {Error_Handler();}
-  uint8_t eeData1 = 20;
-  uint8_t eeData2 = 30;
-  ee_status = EE_ReadVariable8bits(1, &eeData1);
-  ee_status = EE_WriteVariable8bits(1, 7);
-  ee_status = EE_ReadVariable8bits(1, &eeData2);
-
+  //Setup up speed monitoring
   initRevolutionSpeed();
+
+  //Setup and restore previous menu values
+  initMenu();
+  MenuState menuState = NotInMenu;
+  MenuState prevMenuState = NotInMenu;
 
   //Setup pixels
   PixelsInfo pixelInfo;
   initPixels(&pixelInfo, WS2812B_2020, 10, sendSpiPixelDataWrapper, 10000000);
-  Rgb pixelsRgb[] = {{0x00, 0x00, 0x03}, {0x00, 0x00, 0x03}, {0x03, 0x00, 0x00}, {0x03, 0x00, 0x00}, {0x00, 0x03, 0x00}, {0x00, 0x03, 0x00}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, };
+
+  //Show a known pattern at start up for a little bit
+  Rgb pixelsRgb[] = {
+	{0x00, 0x00, 0x03}, {0x00, 0x00, 0x03}, {0x03, 0x00, 0x00}, {0x03, 0x00, 0x00}, {0x00, 0x03, 0x00},
+	{0x00, 0x03, 0x00}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03}, {0x03, 0x00, 0x03},
+  };
   setPixelsRgb(&pixelInfo, pixelsRgb);
   HAL_Delay(500);
-
-  MenuState menuState = NotInMenu;
-  MenuState prevMenuState = NotInMenu;
 
   /* USER CODE END 2 */
 
@@ -135,7 +132,7 @@ int main(void)
 	  ButtonPressType buttonPress = processButtonInput(&pixelInfo);
 	  processMenu(&pixelInfo, buttonPress, &menuState);
 
-	  //Make sure to display a different pattern to show out of menu
+	  //Displays a different pattern to show out of menu
 	  if(prevMenuState == InMenu && menuState == NotInMenu){
 		  for(int i=0; i<pixelInfo.numPixels; i++){
 			  pixelsRgb[i] = (Rgb){0x03, 0x03, 0x00};
@@ -144,7 +141,7 @@ int main(void)
 	  }
 
 	  if(menuState == NotInMenu){
-		  //Display patterns for moving or stationary
+		  //Display patterns for moving or stationary when not in menu
 		  displayPixelPattern(&pixelInfo, pixelsRgb, menuItemValues);
 	  }
 

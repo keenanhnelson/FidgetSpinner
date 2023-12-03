@@ -1,6 +1,7 @@
 #include "user_interface.h"
 #include "tim.h"
 #include <stdlib.h>
+#include "eeprom_emul.h"
 
 #define SHORT_PRESS_MIN 100//Min amount of time(ms) button has to be down for short button press to be registered
 #define SHORT_PRESS_MAX 1000//If button is down for longer than this then it will be considered a long press
@@ -72,6 +73,18 @@ ButtonPressType processButtonInput(){
 	return buttonPress;
 }
 
+void initMenu(){
+	//Restore the previous menu values stored in flash
+	EE_Status ee_status = EE_OK;
+	HAL_FLASH_Unlock();
+	ee_status = EE_Init(EE_FORCED_ERASE);
+	if(ee_status != EE_OK) {Error_Handler();}
+	for(int eeAddress=1, menuIndex=0; menuIndex<NumMenuItems; eeAddress++, menuIndex++){
+		ee_status = EE_ReadVariable8bits(eeAddress, (uint8_t*)&menuItemValues[menuIndex]);
+	}
+	HAL_FLASH_Lock();
+}
+
 //Displays a menu to the user that the use can interact with
 void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *menuState){
 	//If not in menu and short button press then show the start of the menu
@@ -92,8 +105,18 @@ void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *
 		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
 	}
 
-	//Change state to NotInMenu on long button press
+	//On long button press save settings to flash and indicate menu exit
 	if(buttonPress == ButtonLongPress){
+		//Save settings to flash
+		EE_Status ee_status = EE_OK;
+		HAL_FLASH_Unlock();
+		for(int eeAddress=1, menuIndex=0; menuIndex<NumMenuItems; eeAddress++, menuIndex++){
+			ee_status = EE_WriteVariable8bits(eeAddress, menuItemValues[menuIndex]);
+			if(ee_status != EE_OK){Error_Handler();}
+		}
+		HAL_FLASH_Lock();
+
+		//Indicate menu exit
 		*menuState = NotInMenu;
 	}
 
