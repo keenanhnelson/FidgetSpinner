@@ -1,5 +1,6 @@
 #include "user_interface.h"
 #include "tim.h"
+#include <string.h>
 #include <stdlib.h>
 #include "eeprom_emul.h"
 
@@ -11,18 +12,10 @@ typedef enum{
 	ButtonUp
 }ButtonState;
 
-int8_t menuItemValues[NumMenuItems] = {0};
-static Hsv menuItemColors[NumMenuItems] = {{0.0f, 1.0f, 0.05f}, {90.0f, 1.0f, 0.05f}, {180.0f, 1.0f, 0.05f}};
-static int16_t currentCnt = 0;
-static int16_t prevCnt = 0;
-static int16_t diffCnt = 0;
-
 static uint32_t lastButtonPressTime = 0;
 static uint32_t buttonHeldDownDuration = 0;
 static ButtonState prevButtonState = ButtonUp;
 static MenuItem menuItem = 0;
-
-const float menuBrightnessToValue[10] = {0.01f, 0.025f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.8f, 1.0f};//Converts int menu value to hsv value
 
 //Used to display the value of variable to the user
 void displayLedCntAndColor(PixelsInfo *pixelInfo, uint8_t ledCnt, Hsv color){
@@ -73,71 +66,95 @@ ButtonPressType processButtonInput(){
 	return buttonPress;
 }
 
-void initMenu(){
+void initMenu(MenuInfo *menuInfo, bool saveMenuState){
+	//Set the mapping for brightness values
+	const float brightnessToValue[10] = {0.01f, 0.025f, 0.05f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.8f, 1.0f};//Converts int menu value to hsv value
+	memcpy(menuInfo->brightnessToValue, brightnessToValue, sizeof(brightnessToValue));
+
+	//Set the menu colors
+	Hsv itemColors[NumMenuItems] = {{0.0f, 1.0f, 0.05f}, {90.0f, 1.0f, 0.05f}, {180.0f, 1.0f, 0.05f}};
+	memcpy(menuInfo->itemColors, itemColors, sizeof(itemColors));
+
 	//Restore the previous menu values stored in flash
 	EE_Status ee_status = EE_OK;
 	HAL_FLASH_Unlock();
 	ee_status = EE_Init(EE_FORCED_ERASE);
 	if(ee_status != EE_OK) {Error_Handler();}
 	for(int eeAddress=1, menuIndex=0; menuIndex<NumMenuItems; eeAddress++, menuIndex++){
-		ee_status = EE_ReadVariable8bits(eeAddress, (uint8_t*)&menuItemValues[menuIndex]);
+		ee_status = EE_ReadVariable8bits(eeAddress, (uint8_t*)&menuInfo->itemValues[menuIndex]);
 	}
 	HAL_FLASH_Lock();
+
+	menuInfo->state = NotInMenu;//Start not in menu
+	menuInfo->saveMenuState = saveMenuState;
 }
 
 //Displays a menu to the user that the use can interact with
-void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *menuState){
+void processMenu(MenuInfo *menuInfo, PixelsInfo *pixelInfo, ButtonPressType buttonPress){
 	//If not in menu and short button press then show the start of the menu
-	if(*menuState == NotInMenu && buttonPress == ButtonShortPress){
+	if(menuInfo->state == NotInMenu && buttonPress == ButtonShortPress){
 		menuItem = 0;
-		prevCnt = TIM1->CNT;
-		*menuState = InMenu;
-		menuItemColors[menuItem].v = menuBrightnessToValue[menuItemValues[Brightness]];
-		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
+		menuInfo->prevEncoderCnt = TIM1->CNT;
+		menuInfo->state = InMenu;
+		menuInfo->itemColors[menuItem].v = menuInfo->brightnessToValue[menuInfo->itemValues[Brightness]];
+		displayMenuValue(pixelInfo, menuInfo->itemValues[menuItem], menuInfo->itemColors[menuItem]);
 	}
 	//Or if already in a menu and short button press then show next menu item
-	else if(*menuState == InMenu && buttonPress == ButtonShortPress){
+	else if(menuInfo->state == InMenu && buttonPress == ButtonShortPress){
 		menuItem++;
 		if(menuItem >= NumMenuItems){
 			menuItem = 0;
 		}
-		menuItemColors[menuItem].v = menuBrightnessToValue[menuItemValues[Brightness]];
-		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
+		menuInfo->itemColors[menuItem].v = menuInfo->brightnessToValue[menuInfo->itemValues[Brightness]];
+		displayMenuValue(pixelInfo, menuInfo->itemValues[menuItem], menuInfo->itemColors[menuItem]);
 	}
 
 	//On long button press save settings to flash and indicate menu exit
 	if(buttonPress == ButtonLongPress){
-		//Save settings to flash
-		EE_Status ee_status = EE_OK;
-		HAL_FLASH_Unlock();
-		for(int eeAddress=1, menuIndex=0; menuIndex<NumMenuItems; eeAddress++, menuIndex++){
-			ee_status = EE_WriteVariable8bits(eeAddress, menuItemValues[menuIndex]);
-			if(ee_status != EE_OK){Error_Handler();}
+		//Save settings to flash if desired
+		if(menuInfo->saveMenuState){
+			EE_Status ee_status = EE_OK;
+			HAL_FLASH_Unlock();
+			for(int eeAddress=1, menuIndex=0; menuIndex<NumMenuItems; eeAddress++, menuIndex++){
+				//Try to write data to flash. If it fails then try to clean up. If it fails too many times then error out.
+				for(int i=0; i<10; i++){
+					ee_status = EE_WriteVariable8bits(eeAddress, menuInfo->itemValues[menuIndex]);
+					if(ee_status == EE_OK){
+						break;
+					}
+					else if(ee_status == EE_CLEANUP_REQUIRED){
+						ee_status = EE_CleanUp();
+					}
+					else{
+						Error_Handler();
+					}
+				}
+				if(ee_status != EE_OK){Error_Handler();}
+			}
+			HAL_FLASH_Lock();
 		}
-		HAL_FLASH_Lock();
-
 		//Indicate menu exit
-		*menuState = NotInMenu;
+		menuInfo->state = NotInMenu;
 	}
 
 	//Exit if NotInMenu
-	if(*menuState == NotInMenu){
+	if(menuInfo->state == NotInMenu){
 		return;
 	}
 
 	//Increase or decrease menu items based on encoder value
-	currentCnt = TIM1->CNT;
-	diffCnt = currentCnt - prevCnt;
-	prevCnt = currentCnt;
+	int16_t currentCnt = TIM1->CNT;
+	int16_t diffCnt = currentCnt - menuInfo->prevEncoderCnt;
+	menuInfo->prevEncoderCnt = currentCnt;
 	if(diffCnt != 0){
-		menuItemValues[menuItem] += diffCnt;
-		if(menuItemValues[menuItem] < 0){
-			menuItemValues[menuItem] = 0;
+		menuInfo->itemValues[menuItem] += diffCnt;
+		if(menuInfo->itemValues[menuItem] < 0){
+			menuInfo->itemValues[menuItem] = 0;
 		}
-		else if(menuItemValues[menuItem] > 9){
-			menuItemValues[menuItem] = 9;
+		else if(menuInfo->itemValues[menuItem] > 9){
+			menuInfo->itemValues[menuItem] = 9;
 		}
-		menuItemColors[menuItem].v = menuBrightnessToValue[menuItemValues[Brightness]];
-		displayMenuValue(pixelInfo, menuItemValues[menuItem], menuItemColors[menuItem]);
+		menuInfo->itemColors[menuItem].v = menuInfo->brightnessToValue[menuInfo->itemValues[Brightness]];
+		displayMenuValue(pixelInfo, menuInfo->itemValues[menuItem], menuInfo->itemColors[menuItem]);
 	}
 }

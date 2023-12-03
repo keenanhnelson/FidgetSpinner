@@ -107,9 +107,9 @@ int main(void)
   initRevolutionSpeed();
 
   //Setup and restore previous menu values
-  initMenu();
-  MenuState menuState = NotInMenu;
-  MenuState prevMenuState = NotInMenu;
+  MenuInfo menuInfo;
+  bool saveMenuState = true;
+  initMenu(&menuInfo, saveMenuState);
 
   //Setup pixels
   PixelsInfo pixelInfo;
@@ -130,22 +130,12 @@ int main(void)
   while (1)
   {
 	  ButtonPressType buttonPress = processButtonInput(&pixelInfo);
-	  processMenu(&pixelInfo, buttonPress, &menuState);
+	  processMenu(&menuInfo, &pixelInfo, buttonPress);
 
-	  //Displays a different pattern to show out of menu
-	  if(prevMenuState == InMenu && menuState == NotInMenu){
-		  for(int i=0; i<pixelInfo.numPixels; i++){
-			  pixelsRgb[i] = (Rgb){0x03, 0x03, 0x00};
-		  }
-		  setPixelsRgb(&pixelInfo, pixelsRgb);
+	  //Display patterns for moving or stationary when not in menu
+	  if(menuInfo.state == NotInMenu){
+		  displayPixelPattern(&pixelInfo, pixelsRgb, &menuInfo);
 	  }
-
-	  if(menuState == NotInMenu){
-		  //Display patterns for moving or stationary when not in menu
-		  displayPixelPattern(&pixelInfo, pixelsRgb, menuItemValues);
-	  }
-
-	  prevMenuState = menuState;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

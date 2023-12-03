@@ -12,20 +12,20 @@ static float currentRpm = 0;
 static float prevRpm = 0;
 static float brightness = -1;
 
-void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, int8_t *menuItemValues){
+void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, MenuInfo *menuInfo){
 	currentRpm = fabsf(getRpm());
 	currentTime = HAL_GetTick();
 
-	brightness = menuBrightnessToValue[menuItemValues[Brightness]];//Map menu brightness to a range between 0 and 1
+	brightness = menuInfo->brightnessToValue[menuInfo->itemValues[Brightness]];//Map menu brightness to a range between 0 and 1
 
 	if(currentRpm > 100){
 		//Display moving pattern selected in menu
-		MovingPixelPatternType movingPattern = menuItemValues[PatternMoving];
+		MovingPixelPatternType movingPattern = menuInfo->itemValues[PatternMoving];
 		displayMovingPixelPattern(pixelInfo, pixelsRgb, movingPattern);
 	}
 	else{
 		//Display stationary pattern
-		StationaryPixelPatternType stationaryPattern = menuItemValues[PatternStationary];
+		StationaryPixelPatternType stationaryPattern = menuInfo->itemValues[PatternStationary];
 		displayStationaryPixelPattern(pixelInfo, pixelsRgb, stationaryPattern);
 	}
 }

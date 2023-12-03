@@ -2,6 +2,7 @@
 #define USER_INTERFACE_H_
 
 #include "pixels.h"
+#include <stdbool.h>
 
 typedef enum{
 	ButtonNoPress,
@@ -21,11 +22,17 @@ typedef enum{
 	NumMenuItems
 }MenuItem;
 
-extern int8_t menuItemValues[NumMenuItems];
-extern const float menuBrightnessToValue[10];
+typedef struct{
+	int8_t itemValues[NumMenuItems];
+	float brightnessToValue[10];
+	MenuState state;
+	Hsv itemColors[NumMenuItems];
+	int16_t prevEncoderCnt;
+	bool saveMenuState;
+}MenuInfo;
 
 ButtonPressType processButtonInput();
-void initMenu();
-void processMenu(PixelsInfo *pixelInfo, ButtonPressType buttonPress, MenuState *menuState);
+void initMenu(MenuInfo *menuInfo, bool saveMenuState);
+void processMenu(MenuInfo *menuInfo, PixelsInfo *pixelInfo, ButtonPressType buttonPress);
 
 #endif /* USER_INTERFACE_H_ */
