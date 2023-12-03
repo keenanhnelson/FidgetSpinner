@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "dma.h"
 #include "spi.h"
 #include "tim.h"
@@ -34,6 +35,7 @@
 #include "pixels_patterns.h"
 #include "user_interface.h"
 #include "revolution_speed.h"
+#include "eeprom_emul.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,7 +101,18 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM1_Init();
   MX_TIM6_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
+
+  EE_Status ee_status = EE_OK;
+  HAL_FLASH_Unlock();
+  ee_status = EE_Init(EE_FORCED_ERASE);
+  if(ee_status != EE_OK) {Error_Handler();}
+  uint8_t eeData1 = 20;
+  uint8_t eeData2 = 30;
+  ee_status = EE_ReadVariable8bits(1, &eeData1);
+  ee_status = EE_WriteVariable8bits(1, 7);
+  ee_status = EE_ReadVariable8bits(1, &eeData2);
 
   initRevolutionSpeed();
 
