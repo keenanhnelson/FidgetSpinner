@@ -32,7 +32,7 @@ void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, MenuInfo *menuIn
 
 void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPixelPatternType pixelPattern){
 	switch(pixelPattern){
-		case PIXEL_PATTERN3:{
+		case PIXEL_PATTERN1:{
 			static int currentLedIndex = -1;
 			static int prevLedIndex = -1;
 			static int16_t diffCnt;
@@ -109,7 +109,7 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			break;
 		}
 
-		case PIXEL_PATTERN1:{
+		case PIXEL_PATTERN3:{
 			static float lowToHighRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass whem coming from low rpm to high rpm before changing color
 			static float highToLowRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass when coming from high rpm to low rpm before changing color
 			static int numBoundaries = sizeof(lowToHighRpmBoundaries)/sizeof(lowToHighRpmBoundaries[0]);
@@ -149,6 +149,34 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			}
 
 			prevRpm = currentRpm;
+			break;
+		}
+
+		case PIXEL_PATTERN4:{
+			static const float minRpm = 900;
+			static const float maxRpm = 2500;
+			static const float minHue = 0;
+			static const float maxHue = 359;
+			static const float m = (maxHue-minHue)/(maxRpm-minRpm);
+			static const float b = minHue - m*minRpm;
+			static uint32_t prevTime = 0;
+
+			//Make sure to wait some time for pixel data to write to the leds
+			if(currentTime - prevTime < 10){
+				break;
+			}
+
+			float rpm = fabsf(getRpm());
+			if(rpm < minRpm){rpm = minRpm;}
+			if(rpm > maxRpm){rpm = maxRpm;}
+			float rpmToHue = rpm * m + b;
+			Hsv hsv = {rpmToHue, 1, brightness};
+			Rgb color = hsvToRgb(hsv);
+			for(int i=0; i<pixelsInfo->numPixels; i++){
+				pixelsRgb[i] = color;
+			}
+			setPixelsRgb(pixelsInfo, pixelsRgb);
+			prevTime = currentTime;
 			break;
 		}
 	}

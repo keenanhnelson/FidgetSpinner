@@ -22,6 +22,8 @@ void initPixels(
 		//216 spi bits for 24 ws2812b bits
 		//27 spi bytes per 1 ws2812b pixel
 		//After all the color data bits are sent the data line needs to say low for at least 280us or 2800 spi bits or 350 spi bytes
+		//Takes 21.6us to send color info for one pixel. Takes 216us for 10 pixels. Takes 280us to send reset code
+		//Takes a total of 496us to send all the data for 10 pixels and is the required time to wait before updating with new data
 
 		pixelInfo->pixelsType = pixelsType;
 		pixelInfo->numPixels = numPixels;
