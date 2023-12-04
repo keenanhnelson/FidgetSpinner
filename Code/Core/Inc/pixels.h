@@ -30,7 +30,6 @@ typedef struct{
 	uint16_t numSpiBitsHighFor1;
 	uint16_t numSpiBytesEndSignal;
 	uint32_t totalNumSpiBytesToSend;
-	void (*sendSpiData)(uint8_t *data, uint32_t len);
 	uint32_t spiClockFreq;
 }PixelsInfo;
 
@@ -38,7 +37,6 @@ void initPixels(
 		PixelsInfo *pixelInfo,
 		PixelsType pixelsType,
 		uint32_t numPixels,
-		void (*sendSpiData)(uint8_t *data, uint32_t len),
 		uint32_t spiClockFreq
 );
 void deinitPixels(PixelsInfo *pixelsInfo);

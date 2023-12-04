@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "stm32l4xx_hal.h"
+#include "spi.h"
 
 void initPixels(
 		PixelsInfo *pixelInfo,
 		PixelsType pixelsType,
 		uint32_t numPixels,
-		void (*sendSpiData)(uint8_t *data, uint32_t len),
 		uint32_t spiClockFreq
 		)
 {
@@ -37,7 +37,7 @@ void initPixels(
 		pixelInfo->totalNumSpiBytesToSend = numPixels*pixelInfo->numSpiBytesPerPixel + pixelInfo->numSpiBytesEndSignal;
 
 		pixelInfo->spiData = malloc(pixelInfo->totalNumSpiBytesToSend);
-		pixelInfo->sendSpiData = sendSpiData;
+
 	}
 	else{
 		assert(0);//Pixel type not supported
@@ -113,7 +113,7 @@ void setPixelsRgb(PixelsInfo *pixelsInfo, Rgb *rgb){
     }
 
     //Transmit all the data needed to light up all of the smart pixels
-    pixelsInfo->sendSpiData(pixelsInfo->spiData, pixelsInfo->totalNumSpiBytesToSend);
+    HAL_SPI_Transmit_DMA(&hspi1, pixelsInfo->spiData, pixelsInfo->totalNumSpiBytesToSend);
 
 }
 

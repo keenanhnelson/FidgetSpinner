@@ -31,7 +31,6 @@
 #include <stdlib.h>
 
 #include "pixels.h"
-#include "pixels_spi_wrapper.h"
 #include "pixels_patterns.h"
 #include "user_interface.h"
 #include "revolution_speed.h"
@@ -113,7 +112,7 @@ int main(void)
 
   //Setup pixels
   PixelsInfo pixelInfo;
-  initPixels(&pixelInfo, WS2812B_2020, 10, sendSpiPixelDataWrapper, 10000000);
+  initPixels(&pixelInfo, WS2812B_2020, 10, 10000000);
 
   //Show a known pattern at start up for a little bit
   Rgb pixelsRgb[] = {
