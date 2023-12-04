@@ -159,10 +159,9 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			static const float maxHue = 359;
 			static const float m = (maxHue-minHue)/(maxRpm-minRpm);
 			static const float b = minHue - m*minRpm;
-			static uint32_t prevTime = 0;
 
 			//Make sure to wait some time for pixel data to write to the leds
-			if(currentTime - prevTime < 10){
+			if(getIsSendingPixelData()){
 				break;
 			}
 
@@ -176,7 +175,6 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 				pixelsRgb[i] = color;
 			}
 			setPixelsRgb(pixelsInfo, pixelsRgb);
-			prevTime = currentTime;
 			break;
 		}
 	}

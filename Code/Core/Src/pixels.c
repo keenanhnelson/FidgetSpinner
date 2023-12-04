@@ -5,6 +5,8 @@
 #include "stm32l4xx_hal.h"
 #include "spi.h"
 
+static bool isSendingPixelData = false;
+
 void initPixels(
 		PixelsInfo *pixelInfo,
 		PixelsType pixelsType,
@@ -37,7 +39,6 @@ void initPixels(
 		pixelInfo->totalNumSpiBytesToSend = numPixels*pixelInfo->numSpiBytesPerPixel + pixelInfo->numSpiBytesEndSignal;
 
 		pixelInfo->spiData = malloc(pixelInfo->totalNumSpiBytesToSend);
-
 	}
 	else{
 		assert(0);//Pixel type not supported
@@ -114,7 +115,7 @@ void setPixelsRgb(PixelsInfo *pixelsInfo, Rgb *rgb){
 
     //Transmit all the data needed to light up all of the smart pixels
     HAL_SPI_Transmit_DMA(&hspi1, pixelsInfo->spiData, pixelsInfo->totalNumSpiBytesToSend);
-
+    isSendingPixelData = true;
 }
 
 void setPixelsHsv(PixelsInfo *pixelsInfo, Rgb *rgb, Hsv *hsv){
@@ -122,4 +123,14 @@ void setPixelsHsv(PixelsInfo *pixelsInfo, Rgb *rgb, Hsv *hsv){
 		rgb[i] = hsvToRgb(hsv[i]);
 	}
 	setPixelsRgb(pixelsInfo, rgb);
+}
+
+bool getIsSendingPixelData(){
+	return isSendingPixelData;
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi){
+	if(hspi==&hspi1){
+		isSendingPixelData = false;
+	}
 }

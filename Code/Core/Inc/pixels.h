@@ -2,6 +2,7 @@
 #define PIXELS_CONTROL_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum{
 	WS2812B_2020
@@ -43,5 +44,5 @@ void deinitPixels(PixelsInfo *pixelsInfo);
 Rgb hsvToRgb(Hsv hsv);
 void setPixelsRgb(PixelsInfo *pixelInfo, Rgb *rgb);
 void setPixelsHsv(PixelsInfo *pixelsInfo, Rgb *rgb, Hsv *hsv);
-
+bool getIsSendingPixelData();
 #endif
