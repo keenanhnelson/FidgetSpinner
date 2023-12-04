@@ -1,6 +1,6 @@
+#include <kinematics.h>
 #include "pixels_patterns.h"
 #include "tim.h"
-#include "revolution_speed.h"
 #include <math.h>
 #include "user_interface.h"
 

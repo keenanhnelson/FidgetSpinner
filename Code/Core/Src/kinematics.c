@@ -1,4 +1,4 @@
-#include "revolution_speed.h"
+#include "kinematics.h"
 #include "tim.h"
 
 //80MHz clock, Prescaler=8000-1, Counter Period=1000, (1/80e6)*8000*1000 = 100ms for every interrupt
@@ -19,7 +19,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 }
 
-void initRevolutionSpeed(){
+void initKinematics(){
 	HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_1);
 	resetEncoderCnt();
 

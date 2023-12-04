@@ -33,7 +33,7 @@
 #include "pixels.h"
 #include "pixels_patterns.h"
 #include "user_interface.h"
-#include "revolution_speed.h"
+#include "kinematics.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -103,7 +103,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   //Setup up speed monitoring
-  initRevolutionSpeed();
+  initKinematics();
 
   //Setup and restore previous menu values
   MenuInfo menuInfo;
