@@ -1,30 +1,39 @@
 #include "kinematics.h"
 #include "tim.h"
 
-//80MHz clock, Prescaler=8000-1, Counter Period=1000, (1/80e6)*8000*1000 = 100ms for every interrupt
-//If interrupt is every 0.1s and there are 6 magnets then the slowest rpm detectable is 100rpm=((1/6)/0.1)*60
-#define REV_TIME_S 0.1f//The amount of time that passes while counting encoder ticks
+//80MHz clock, Prescaler=80-1, 1TmrCnt=1us, MaxAmountOfTime=4294.967295s or 71.58m
+//Fastest Rpm that can be measured is 10e6 rpm
+//Slowest Rpm that can be measured is 2.3e-3 rpm
+//rpm = (1rev/NumMagnets)(1/ElapsedTime)(60s/1m)
+//rpm = (1rev/NumMagnets)(1/(TmrCnt*1us))(60s/1m) = (6e7/(NumMagnets*TmrCnt))
+
 #define NUM_MAGNETS 6
 
-static int16_t prevCnt = 0;
-static int16_t currentCnt = 0;
-static int16_t diffCnt = 0;
 static float rpm = 0;
+static uint32_t elapsedTmrCnt = 1e7;//Start at 1rpm
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	if(htim == &htim6){
-		currentCnt = getEncoderCnt();
-		diffCnt = currentCnt - prevCnt;
-		prevCnt = currentCnt;
+void HAL_TIM_TriggerCallback(TIM_HandleTypeDef *htim){
+	if(htim == &htim1){
+		elapsedTmrCnt = __HAL_TIM_GET_COUNTER(&htim2);
+		__HAL_TIM_SET_COUNTER(&htim2, 0);//Reset timer
 	}
 }
 
 void initKinematics(){
-	HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_1);
+	//Start encoder
+	HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);
 	resetEncoderCnt();
 
-	__HAL_TIM_CLEAR_FLAG(&htim6, TIM_SR_UIF);//Required so interrupt doesn't fire immediately on start
-	HAL_TIM_Base_Start_IT(&htim6);//Timer used to measure speed
+	//Enable encoder interrupt on count change
+	TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+	sSlaveConfig.SlaveMode = htim1.Instance->SMCR && TIM_SMCR_SMS;//Save the encoder mode
+	sSlaveConfig.InputTrigger = TIM_TS_TI1F_ED;//Activate interrupt on encoder count change
+	HAL_StatusTypeDef halStatus = HAL_TIM_SlaveConfigSynchro_IT(&htim1, &sSlaveConfig);
+	if(halStatus != HAL_OK){
+		Error_Handler();
+	}
+
+	HAL_TIM_Base_Start(&htim2);//Timer used to measure speed
 }
 
 void resetEncoderCnt(){
@@ -36,6 +45,6 @@ int16_t getEncoderCnt(){
 }
 
 float getRpm(){
-	rpm = ((float)diffCnt*60.0f)/((float)NUM_MAGNETS*REV_TIME_S);
+	rpm = ((float)60000000/((float)NUM_MAGNETS*(float)elapsedTmrCnt));
 	return rpm;
 }

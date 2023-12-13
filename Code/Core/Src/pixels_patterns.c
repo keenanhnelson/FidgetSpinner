@@ -18,7 +18,7 @@ void displayPixelPattern(PixelsInfo *pixelInfo, Rgb *pixelsRgb, MenuInfo *menuIn
 
 	brightness = menuInfo->brightnessToValue[menuInfo->itemValues[Brightness]];//Map menu brightness to a range between 0 and 1
 
-	if(currentRpm > 100){
+	if(currentRpm > 60){
 		//Display moving pattern selected in menu
 		MovingPixelPatternType movingPattern = menuInfo->itemValues[PatternMoving];
 		displayMovingPixelPattern(pixelInfo, pixelsRgb, movingPattern);
@@ -78,7 +78,7 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 		}
 
 		case PIXEL_PATTERN2:{
-			static Hsv colors[] = {{45, 1, 0.1f}, {135, 1, 0.1f}, {225, 1, 0.1f}, {315, 1, 0.1f}, };
+			static Hsv colors[] = {{0, 1, 0.1f}, {45, 1, 0.1f}, {90, 1, 0.1f}, {135, 1, 0.1f}, {180, 1, 0.1f}, {225, 1, 0.1f}, };
 			static int numColors = sizeof(colors)/sizeof(colors[0]);
 			static int16_t diffCnt;
 			static int colorIndex = 0;
@@ -110,8 +110,8 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 		}
 
 		case PIXEL_PATTERN3:{
-			static float lowToHighRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass whem coming from low rpm to high rpm before changing color
-			static float highToLowRpmBoundaries[] = {1000, 1300, 1600};//Threshold to pass when coming from high rpm to low rpm before changing color
+			static float lowToHighRpmBoundaries[] = {100, 200, 500};//Threshold to pass whem coming from low rpm to high rpm before changing color
+			static float highToLowRpmBoundaries[] = {100, 200, 500};//Threshold to pass when coming from high rpm to low rpm before changing color
 			static int numBoundaries = sizeof(lowToHighRpmBoundaries)/sizeof(lowToHighRpmBoundaries[0]);
 			static Hsv areaColors[] = {{0, 1, 0.1f}, {90, 1, 0.1f}, {180, 1, 0.1f}, {270, 1, 0.1f},};
 			//static int numAreas = sizeof(areaColors)/sizeof(areaColors[0]);
@@ -153,10 +153,10 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 		}
 
 		case PIXEL_PATTERN4:{
-			static const float minRpm = 900;
-			static const float maxRpm = 2500;
+			static const float minRpm = 600;
+			static const float maxRpm = 1000;
 			static const float minHue = 0;
-			static const float maxHue = 359;
+			static const float maxHue = 320;
 			static const float m = (maxHue-minHue)/(maxRpm-minRpm);
 			static const float b = minHue - m*minRpm;
 

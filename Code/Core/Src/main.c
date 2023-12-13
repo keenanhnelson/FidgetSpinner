@@ -98,8 +98,8 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
-  MX_TIM6_Init();
   MX_CRC_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   //Setup up speed monitoring
@@ -107,7 +107,7 @@ int main(void)
 
   //Setup and restore previous menu values
   MenuInfo menuInfo;
-  bool saveMenuState = true;
+  bool saveMenuState = false;
   initMenu(&menuInfo, saveMenuState);
 
   //Setup pixels
