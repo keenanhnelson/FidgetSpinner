@@ -8,7 +8,8 @@ typedef enum{
 	PIXEL_PATTERN1,
 	PIXEL_PATTERN2,
 	PIXEL_PATTERN3,
-	PIXEL_PATTERN4
+	PIXEL_PATTERN4,
+	PIXEL_PATTERN5
 }MovingPixelPatternType;
 
 typedef enum{

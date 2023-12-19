@@ -9,12 +9,34 @@
 
 #define NUM_MAGNETS 6
 
-static float rpm = 0;
-static uint32_t elapsedTmrCnt = 1e7;//Start at 1rpm
+static volatile uint32_t elapsedTmrCnt = 1e7;//Start at 1rpm
+static volatile int16_t currentEncoderCnt = 0;
+static volatile int16_t prevEncoderCnt = 0;
+static volatile int8_t currentMagnetIndex = 0;
+static volatile float rotationDir = 1;
 
+//Called on every new encoder value change
 void HAL_TIM_TriggerCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim1){
-		elapsedTmrCnt = __HAL_TIM_GET_COUNTER(&htim2);
+		//Keep track of magnet position index
+		currentEncoderCnt = __HAL_TIM_GET_COUNTER(&htim1);
+		if(currentEncoderCnt > prevEncoderCnt){
+			rotationDir = 1;
+			currentMagnetIndex++;
+			if(currentMagnetIndex >= NUM_MAGNETS){
+				currentMagnetIndex = 0;
+			}
+		}
+		else{
+			rotationDir = -1;
+			currentMagnetIndex--;
+			if(currentMagnetIndex < 0){
+				currentMagnetIndex = NUM_MAGNETS - 1;
+			}
+		}
+		prevEncoderCnt = currentEncoderCnt;
+
+		elapsedTmrCnt = __HAL_TIM_GET_COUNTER(&htim2);//Get elapsed time
 		__HAL_TIM_SET_COUNTER(&htim2, 0);//Reset timer
 	}
 }
@@ -44,7 +66,17 @@ int16_t getEncoderCnt(){
 	return __HAL_TIM_GET_COUNTER(&htim1);
 }
 
+float getPosition(){
+	uint32_t tmrCntBetweenMagnetsUs = __HAL_TIM_GET_COUNTER(&htim2);//Time elapsed since last magnet
+	float revPerUs = (1.0f/(NUM_MAGNETS*elapsedTmrCnt));//Speed calculated at last magnet
+	float revElapsed = revPerUs * tmrCntBetweenMagnetsUs;//Distance since last magnet
+	if(revElapsed > 1/(float)NUM_MAGNETS){
+		revElapsed = 1/(float)NUM_MAGNETS;
+	}
+	float currentRevPosition = (rotationDir * revElapsed) + (currentMagnetIndex/(float)NUM_MAGNETS);//Distance from first magnet
+	return currentRevPosition;
+}
+
 float getRpm(){
-	rpm = ((float)60000000/((float)NUM_MAGNETS*(float)elapsedTmrCnt));
-	return rpm;
+	return (float)60000000/((float)NUM_MAGNETS*(float)elapsedTmrCnt);
 }

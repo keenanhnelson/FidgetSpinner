@@ -6,6 +6,7 @@
 void initKinematics();
 int16_t getEncoderCnt();
 void resetEncoderCnt();
+float getPosition();
 float getRpm();
 
 #endif /* KINEMATAICS_H_ */

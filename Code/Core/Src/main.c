@@ -107,7 +107,7 @@ int main(void)
 
   //Setup and restore previous menu values
   MenuInfo menuInfo;
-  bool saveMenuState = false;
+  bool saveMenuState = true;
   initMenu(&menuInfo, saveMenuState);
 
   //Setup pixels

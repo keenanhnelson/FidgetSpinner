@@ -37,8 +37,9 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			static int prevLedIndex = -1;
 			static int16_t diffCnt;
 			static Hsv colors[] = {{45, 1, 0.1f}, {135, 1, 0.1f}, {225, 1, 0.1f}, {315, 1, 0.1f}, };
-			static int numColors = sizeof(colors)/sizeof(colors[0]);
-			static int colorIndex = 0;
+			static const int numColors = sizeof(colors)/sizeof(colors[0]);
+			static int colorIndex1 = 0;
+			static int colorIndex2 = numColors/2;
 
 			currentCnt = getEncoderCnt();
 			diffCnt = currentCnt - prevCnt;
@@ -50,9 +51,13 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			  currentLedIndex += 1;
 			  if(currentLedIndex >= pixelsInfo->numPixels){
 				  currentLedIndex = 0;
-				  colorIndex++;
-				  if(colorIndex >= numColors){
-					  colorIndex = 0;
+				  colorIndex1++;
+				  if(colorIndex1 >= numColors){
+					  colorIndex1 = 0;
+				  }
+				  colorIndex2++;
+				  if(colorIndex2 >= numColors){
+					  colorIndex2 = 0;
 				  }
 			  }
 			}
@@ -60,16 +65,20 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			  currentLedIndex -= 1;
 			  if(currentLedIndex < 0){
 				  currentLedIndex = pixelsInfo->numPixels-1;
-				  colorIndex--;
-				  if(colorIndex < 0){
-					  colorIndex = numColors - 1;
+				  colorIndex1--;
+				  if(colorIndex1 < 0){
+					  colorIndex1 = numColors - 1;
+				  }
+				  colorIndex2--;
+				  if(colorIndex2 < 0){
+					  colorIndex2 = numColors - 1;
 				  }
 			  }
 			}
 			if(prevCnt != currentCnt){
 				pixelsRgb[prevLedIndex] = (Rgb){0x00, 0x00, 0x03};
-				colors[colorIndex].v = brightness;//Update brightness with menu selected value
-				pixelsRgb[currentLedIndex] = hsvToRgb(colors[colorIndex]);
+				colors[colorIndex1].v = brightness;//Update brightness with menu selected value
+				pixelsRgb[currentLedIndex] = hsvToRgb(colors[colorIndex1]);
 				prevCnt = currentCnt;
 				prevLedIndex = currentLedIndex;
 				setPixelsRgb(pixelsInfo, pixelsRgb);
@@ -171,6 +180,32 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			float rpmToHue = rpm * m + b;
 			Hsv hsv = {rpmToHue, 1, brightness};
 			Rgb color = hsvToRgb(hsv);
+			for(int i=0; i<pixelsInfo->numPixels; i++){
+				pixelsRgb[i] = color;
+			}
+			setPixelsRgb(pixelsInfo, pixelsRgb);
+			break;
+		}
+
+		case PIXEL_PATTERN5:{
+			static Hsv colors[] = {{0, 1, 0.1f}, {180, 1, 0.1f}, };
+//			static int numColors = sizeof(colors)/sizeof(colors[0]);
+			static int colorIndex = 0;
+
+			//Make sure to wait some time for pixel data to write to the leds
+			if(getIsSendingPixelData()){
+				break;
+			}
+
+			float currentPosition = getPosition();
+			if(currentPosition > 0.75f){
+				colorIndex = 0;
+			}
+			else{
+				colorIndex = 1;
+			}
+			colors[colorIndex].v = brightness;//Update brightness with menu selected value
+			Rgb color = hsvToRgb(colors[colorIndex]);
 			for(int i=0; i<pixelsInfo->numPixels; i++){
 				pixelsRgb[i] = color;
 			}
