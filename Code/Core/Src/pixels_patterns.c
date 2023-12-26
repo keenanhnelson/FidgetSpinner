@@ -191,14 +191,25 @@ void displayMovingPixelPattern(PixelsInfo *pixelsInfo, Rgb *pixelsRgb, MovingPix
 			static Hsv colors[] = {{0, 1, 0.1f}, {180, 1, 0.1f}, };
 //			static int numColors = sizeof(colors)/sizeof(colors[0]);
 			static int colorIndex = 0;
+			static const float minRpm = 600;
+			static const float maxRpm = 1000;
+			static const float minPos = 0.1f;
+			static const float maxPos = 0.9f;
+			static const float m = (maxPos-minPos)/(maxRpm-minRpm);
+			static const float b = minPos - m*minRpm;
 
 			//Make sure to wait some time for pixel data to write to the leds
 			if(getIsSendingPixelData()){
 				break;
 			}
 
+			float rpm = fabsf(getRpm());
+			if(rpm < minRpm){rpm = minRpm;}
+			if(rpm > maxRpm){rpm = maxRpm;}
+			float rpmToPosition = rpm * m + b;
+
 			float currentPosition = getPosition();
-			if(currentPosition > 0.75f){
+			if(currentPosition > rpmToPosition){
 				colorIndex = 0;
 			}
 			else{
